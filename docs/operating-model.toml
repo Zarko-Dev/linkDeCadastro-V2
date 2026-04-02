@@ -1,0 +1,60 @@
+title = "Link de Cadastro V2 Frontend Operating Model"
+purpose = "Reference model for frontend V2 execution"
+
+[governance]
+agents = [
+  "front-architecture-agent",
+  "front-product-agent",
+  "front-chat-agent",
+]
+
+[execution]
+agents = [
+  "front-shell-agent",
+  "front-design-system-agent",
+  "front-data-contract-agent",
+  "front-core-domain-agent",
+  "front-platform-integration-agent",
+]
+
+order = [
+  "front-architecture-agent",
+  "front-product-agent",
+  "front-shell-agent",
+  "front-design-system-agent",
+  "front-data-contract-agent",
+  "front-core-domain-agent",
+  "front-platform-integration-agent",
+  "front-chat-agent",
+]
+
+[rules]
+domain_boundaries = true
+ui_only_in_frontend = true
+business_rules_in_api = true
+chat_isolated_from_core = true
+versioned_contracts = true
+
+[agents.front-architecture-agent]
+mission = "define the frontend direction and boundaries"
+
+[agents.front-product-agent]
+mission = "prioritize product journeys and delivery order"
+
+[agents.front-chat-agent]
+mission = "own the chat and WhatsApp experience in the UI"
+
+[agents.front-shell-agent]
+mission = "build the app shell, routes, and navigation"
+
+[agents.front-design-system-agent]
+mission = "build tokens and reusable UI primitives"
+
+[agents.front-data-contract-agent]
+mission = "align API contracts, types, and mocks"
+
+[agents.front-core-domain-agent]
+mission = "implement core product journeys"
+
+[agents.front-platform-integration-agent]
+mission = "handle S3, config, and platform concerns"
