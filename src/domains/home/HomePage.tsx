@@ -7,76 +7,77 @@ import {
   StaggerGroup,
   StaggerItem,
 } from '@/shared/ui/motion/MotionPrimitives';
+import {
+  ZyrEmptyState,
+  ZyrErrorState,
+  ZyrHint,
+} from '@/shared/ui/zyr/ZyrStates';
 
-const plans = [
+const navLinks = [
+  { label: 'Painel', href: '/dashboard' },
+  { label: 'Eventos', href: '/events' },
+  { label: 'Formulários', href: '/form' },
+  { label: 'WhatsApp', href: '/chat' },
+  { label: 'Agentes', href: '/agents' },
+  { label: 'Automações', href: '/automations' },
+  { label: 'Integrações', href: '/integrations' },
+] as const;
+
+const heroStats = [
+  { label: 'Eventos em foco', value: '18' },
+  { label: 'Agentes ativos', value: '32' },
+  { label: 'Mensagens/dia', value: '3.4k' },
+] as const;
+
+const eventHighlights = [
   {
-    label: 'Essencial',
-    name: 'Simples',
-    price: 'R$ 40',
-    cadence: 'por mes',
-    tone: 'slate',
-    bullets: [
-      'Cadastro de leads e inscritos',
-      'Gestao de eventos e formularios',
-      'Painel administrativo completo',
-      'CRM basico com funil visual',
-    ],
+    title: 'Growth Summit V2',
+    status: 'Ao vivo',
+    participants: '812 inscritos',
+    focus: 'Dashboard prioriza eventos e gatilhos que fecham vendas.',
+    nextStep: 'Roteamento Zyr para o WhatsApp + follow-up automático.',
   },
   {
-    label: 'Mais vendido',
-    name: 'WhatsApp',
-    price: 'R$ 60',
-    cadence: 'por mes',
-    tone: 'violet',
-    bullets: [
-      'Tudo do plano Simples',
-      'Multiplos numeros de WhatsApp',
-      'Transmissoes e atendimento',
-      'Sincronizacao de grupos e contatos',
-    ],
+    title: 'Operação Corona',
+    status: 'Pré-evento',
+    participants: '431 inscritos',
+    focus: 'Fluxo híbrido de clínica + consultoria em campo.',
+    nextStep: 'Formulário condicional com dados de saúde + agenda.',
   },
   {
-    label: 'IA ativa',
-    name: 'Agentes',
-    price: 'R$ 100',
-    cadence: 'por mes',
-    tone: 'indigo',
-    bullets: [
-      'Tudo do plano WhatsApp',
-      'Agente inteligente configuravel',
-      'Atendimento autonomo por numero',
-      'Acionamento de automacoes e contexto',
-    ],
-  },
-  {
-    label: 'Sob medida',
-    name: 'Personalizado',
-    price: 'R$ 120',
-    cadence: 'por mes',
-    tone: 'orange',
-    bullets: [
-      'Tudo do plano Agentes',
-      '2 agentes inclusos',
-      'Fluxos personalizados por cliente',
-      'Acompanhamento de implantacao',
-    ],
+    title: 'Barber Lab Meetup',
+    status: 'Planejado',
+    participants: '26 espaços confirmados',
+    focus: 'Captura e indexação de leads com serviço e horário.',
+    nextStep: 'Sincroniza com WhatsApp e agenda pública.',
   },
 ] as const;
 
-const showcases = [
+const formFields = [
+  { label: 'Nome completo', helper: 'Topo obrigatório para qualquer público.' },
+  { label: 'CPF / documento', helper: 'Pergunta condicional apenas para eventos federais.' },
+  { label: 'Data de nascimento', helper: 'Usada para qualificar jornada.' },
+  { label: 'WhatsApp', helper: 'Conecta ao Evolution e ao CRM.' },
+  { label: 'CEP / estado', helper: 'Dispara segmentação regional.' },
+  { label: 'Cidade / bairro', helper: 'Agenda entrega local e hora.' },
+  { label: 'Produtor ou clinica?', helper: 'Mostra hectares e viveiros quando necessário.' },
+  { label: 'Serviços disponíveis', helper: 'Clinica e barbearia compartilham catálogo e slots.' },
+] as const;
+
+const channelCards = [
   {
-    tag: 'Evento ao vivo',
-    title: 'Cadastro de produtores',
+    title: 'Chat WhatsApp',
     description:
-      'Landing pages com cadastro publico, turma por municipio e acompanhamento completo do lead.',
-    meta: '24 vagas',
+      'Inbox operacional com fila, Evolution e controles rápidos para cada lead.',
+    meta: 'Prioriza atendimento humano + IA',
+    action: 'Abrir WhatsApp',
   },
   {
-    tag: 'Evento ao vivo',
-    title: 'Capacitacao do programa',
+    title: 'Automações',
     description:
-      'Cursos e eventos rodando lado a lado, com divulgacao, confirmacao e operacao dentro da mesma plataforma.',
-    meta: 'Aberto',
+      'Builder visual que deixa claro: trigger → condição → ação → destino final.',
+    meta: 'Fluxos com IA e workers',
+    action: 'Criar automação',
   },
 ] as const;
 
@@ -84,187 +85,243 @@ const integrations = ['Instagram', 'Facebook', 'YouTube', 'Gmail'] as const;
 
 export function HomePage() {
   return (
-    <div className="landing-shell">
-      <FadeIn className="landing-topbar-wrap" delay={0.04}>
-        <header className="landing-topbar">
-          <Link className="landing-brand" href="/">
-            <span className="landing-brand-mark">LD</span>
-            <span className="landing-brand-text">
-              <strong>LinkDe</strong>Cadastro
-            </span>
-          </Link>
-
-          <nav className="landing-nav" aria-label="Navegacao principal">
-            <a href="#inicio">Inicio</a>
-            <a href="#solucoes">Solucoes</a>
-            <a href="#precos">Precos</a>
-            <a href="#suporte">Suporte</a>
-            <a href="#contato">Contatos</a>
-          </nav>
-
-          <div className="landing-topbar-actions">
-            <span className="landing-status">Em breve</span>
-            <Link className="landing-panel-link" href="/dashboard">
-              Meu painel
-            </Link>
+    <div className="home-shell">
+      <header className="home-header">
+        <div className="home-brand">
+          <div className="home-brand-mark">LC</div>
+          <div>
+            <strong>LinkDeCadastro</strong>
+            <p>Workspace V2</p>
           </div>
-        </header>
-      </FadeIn>
+        </div>
 
-      <main className="landing-main" id="inicio">
-        <section className="landing-hero">
-          <FadeIn className="landing-copy" delay={0.08}>
-            <span className="landing-kicker">Plataforma para profissionais</span>
-            <h1>
-              Transforme Cliques em
-              <span> Sucesso Absoluto.</span>
-            </h1>
-            <p>
-              A LinkDeCadastro automatiza sua captacao de leads, gerencia seus
-              eventos e conecta voce diretamente ao seu publico via WhatsApp com
-              inteligencia artificial.
-            </p>
+        <nav className="home-nav" aria-label="Navegação principal">
+          {navLinks.map((link) => (
+            <Link key={link.href} href={link.href}>
+              {link.label}
+            </Link>
+          ))}
+        </nav>
 
-            <div className="landing-cta-row">
-              <Link className="landing-primary-cta" href="/login">
-                Comecar gratuitamente
+        <div className="home-actions">
+          <Link className="home-panel-link" href="/login">
+            Acessar workspace
+          </Link>
+          <button type="button" className="home-ghost-button">
+            Solicitar demo
+          </button>
+        </div>
+      </header>
+
+      <main className="home-body">
+        <section className="home-hero hero-card">
+          <div className="hero-copy">
+            <FadeIn delay={0.04}>
+              <p className="eyebrow">Workspace de automações</p>
+            </FadeIn>
+
+            <FadeIn delay={0.08}>
+              <h1>
+                Transforme cliques em sucesso absoluto, com eventos, formulários e chat
+                operando em um único console.
+              </h1>
+            </FadeIn>
+
+            <FadeIn delay={0.12}>
+              <p>
+                A landing page traz a mesma experiência White Paper do painel: fundo branco,
+                cards cinza e hovers púrpura. O Zyr orienta as prioridades, as automações e o
+                WhatsApp tocam em segundo plano.
+              </p>
+            </FadeIn>
+
+            <div className="hero-cta">
+              <Link className="home-primary-cta" href="/dashboard">
+                Começar gratuitamente
               </Link>
-              <a className="landing-secondary-cta" href="#precos">
+              <Link className="home-secondary-cta" href="/events">
                 Ver planos
-              </a>
-            </div>
-          </FadeIn>
-
-          <FadeIn className="landing-hero-card" delay={0.14}>
-            <div className="landing-hero-card-header">
-              <span className="landing-dot" />
-              <span>Workspace operacional</span>
+              </Link>
             </div>
 
-            <div className="landing-command-preview">
-              <div className="landing-command-copy">
-                <strong>Operacao orientada por agentes</strong>
-                <p>
-                  Formulario, CRM, WhatsApp, automacoes e integracoes prontos
-                  para agir em tempo real.
-                </p>
-              </div>
-
-              <div className="landing-mini-stats">
-                <div>
-                  <span>Leads</span>
-                  <strong>+248</strong>
-                </div>
-                <div>
-                  <span>Fila</span>
-                  <strong>12</strong>
-                </div>
-                <div>
-                  <span>Agentes</span>
-                  <strong>06</strong>
-                </div>
-              </div>
-            </div>
-
-            <div className="landing-integrations-strip">
-              {integrations.map((integration) => (
-                <span key={integration}>{integration}</span>
+            <StaggerGroup className="hero-stats" delayChildren={0.08} staggerChildren={0.04}>
+              {heroStats.map((stat) => (
+                <StaggerItem key={stat.label}>
+                  <div className="stat-card">
+                    <strong>{stat.value}</strong>
+                    <span>{stat.label}</span>
+                  </div>
+                </StaggerItem>
               ))}
+            </StaggerGroup>
+          </div>
+
+          <FadeIn className="hero-panel" delay={0.18}>
+            <div className="hero-panel-head">
+              <span>Dashboard prioriza eventos</span>
+              <span className="badge badge-active">Foco eventos</span>
             </div>
-          </FadeIn>
-        </section>
-
-        <section className="landing-section" id="precos">
-          <FadeIn delay={0.12}>
-            <div className="landing-section-head">
-              <span>Precos</span>
-              <h2>Planos para cada etapa do seu crescimento.</h2>
-              <p>
-                Escolha a estrutura ideal para captacao, vendas no WhatsApp e
-                operacao com agentes inteligentes.
-              </p>
-            </div>
-          </FadeIn>
-
-          <StaggerGroup
-            className="pricing-grid"
-            delayChildren={0.08}
-            staggerChildren={0.06}
-          >
-            {plans.map((plan) => (
-              <StaggerItem key={plan.name}>
-                <article className={`pricing-card pricing-card-${plan.tone}`}>
-                  <div className="pricing-card-head">
-                    <span className="pricing-badge">{plan.label}</span>
-                    <h3>{plan.name}</h3>
-                    <div className="pricing-price">
-                      <strong>{plan.price}</strong>
-                      <span>{plan.cadence}</span>
-                    </div>
-                  </div>
-
-                  <ul className="pricing-list">
-                    {plan.bullets.map((bullet) => (
-                      <li key={bullet}>{bullet}</li>
-                    ))}
-                  </ul>
-
-                  <Link className="pricing-cta" href="/login">
-                    Escolher plano
-                  </Link>
-                </article>
-              </StaggerItem>
-            ))}
-          </StaggerGroup>
-        </section>
-
-        <section className="landing-section" id="solucoes">
-          <FadeIn delay={0.14}>
-            <div className="landing-section-head">
-              <span>Live & on-demand</span>
-              <h2>Eventos & cursos disponiveis</h2>
-              <p>
-                Sua operacao sai do papel com paginas publicas, formularios e
-                jornadas de acompanhamento em uma unica interface.
-              </p>
-            </div>
-          </FadeIn>
-
-          <StaggerGroup
-            className="showcase-grid"
-            delayChildren={0.1}
-            staggerChildren={0.08}
-          >
-            {showcases.map((item) => (
-              <StaggerItem key={item.title}>
-                <article className="showcase-card">
-                  <div className="showcase-media">
-                    <span>{item.tag}</span>
-                  </div>
-                  <div className="showcase-copy">
-                    <h3>{item.title}</h3>
-                    <p>{item.description}</p>
-                    <div className="showcase-meta">
-                      <small>{item.meta}</small>
-                      <Link href="/events">Abrir</Link>
-                    </div>
-                  </div>
-                </article>
-              </StaggerItem>
-            ))}
-          </StaggerGroup>
-        </section>
-
-        <section className="landing-support" id="suporte">
-          <FadeIn delay={0.18}>
-            <span>Suporte</span>
-            <h2>Estrutura pronta para vender, atender e crescer.</h2>
             <p>
-              Do plano mais simples ao atendimento com agentes, a plataforma foi
-              pensada para acompanhar sua operacao desde a captacao ate a
-              conversa com o cliente.
+              O console leva seu cliente direto ao evento ou fluxo que precisa de ação agora.
+              O Zyr destaca o que está acontecendo e o próximo passo.
             </p>
+            <div className="hero-panel-body">
+              <div>
+                <strong>{eventHighlights[0].title}</strong>
+                <p>{eventHighlights[0].focus}</p>
+              </div>
+              <div>
+                <strong>Próximo passo</strong>
+                <p>{eventHighlights[0].nextStep}</p>
+              </div>
+              <div className="hero-panel-meta">
+                <span>{eventHighlights[0].participants}</span>
+                <span>{eventHighlights[0].status}</span>
+              </div>
+            </div>
+            <ZyrHint
+              title="Zyr orienta o foco"
+              description="Agenda o que precisa de ação hoje e evita que o operador perca eventos em execução."
+              tips={['Mostre o evento vivo no topo', 'Coloque o próximo passo em evidencia', 'Conecte o WhatsApp com o evento']}
+              className="hero-zyr"
+            />
           </FadeIn>
+        </section>
+
+        <section className="home-section home-events">
+          <div className="section-head">
+            <span className="eyebrow">Eventos</span>
+            <h2>Dashboard prioriza a exibição de eventos com sinais fortes</h2>
+            <p>
+              Os cards destacam status, intenções e próximos passos. O objetivo é deixar claro o
+              que tocar primeiro e o que precisa de automação.
+            </p>
+          </div>
+
+          <StaggerGroup className="event-grid" delayChildren={0.08} staggerChildren={0.04}>
+            {eventHighlights.map((event) => (
+              <StaggerItem key={event.title}>
+                <article className="event-card">
+                  <div className="card-head">
+                    <span className="badge badge-active">{event.status}</span>
+                    <strong>{event.title}</strong>
+                  </div>
+                  <p>{event.focus}</p>
+                  <div className="card-meta">
+                    <span>{event.participants}</span>
+                    <span>{event.nextStep}</span>
+                  </div>
+                </article>
+              </StaggerItem>
+            ))}
+
+            <StaggerItem>
+              <ZyrEmptyState
+                title="Zyr aguarda seu próximo evento"
+                description="Quando tudo estiver configurado, esse card vira destaque principal do dashboard."
+                action={<Link href="/events">Criar evento agora</Link>}
+              />
+            </StaggerItem>
+          </StaggerGroup>
+        </section>
+
+        <section className="home-section home-forms">
+          <div className="section-head">
+            <span className="eyebrow">Formulários</span>
+            <h2>Campos editáveis que se moldam ao cliente (produtor, clínica ou barbearia)</h2>
+            <p>
+              O builder permite montar formulários públicos com condições específicas e slots
+              sincronizados com a agenda.
+            </p>
+          </div>
+
+          <div className="form-grid">
+            <article className="form-card">
+              <div className="card-head">
+                <span className="eyebrow">Campos essenciais</span>
+                <strong>Seu formulário vivo</strong>
+              </div>
+              <div className="form-fields">
+                {formFields.map((field) => (
+                  <div key={field.label} className="form-field">
+                    <strong>{field.label}</strong>
+                    <p>{field.helper}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="form-card-actions">
+                <button type="button">Configurar formulário</button>
+                <span className="pill pill-ghost">Compartilhe links no WhatsApp</span>
+              </div>
+            </article>
+
+            <article className="form-card form-card-secondary">
+              <ZyrErrorState
+                title="Zyr detecta campos não tributados"
+                description="Campos condicionais como hectares e viveiros só aparecem quando o cliente marca o tipo certo."
+                action={<Link href="/form">Editar builder</Link>}
+              />
+            </article>
+          </div>
+        </section>
+
+        <section className="home-section home-channel">
+          <div className="section-head">
+            <span className="eyebrow">Canal WhatsApp + automações</span>
+            <h2>Chat, automações e integrações orquestram ações em tempo real</h2>
+            <p>
+              O dashboard conecta o chat, as automações e as integrações em um só fluxo. A cada
+              toque o operador entende o que foi entregue e o que está em execução.
+            </p>
+          </div>
+
+          <StaggerGroup className="channel-grid" delayChildren={0.08} staggerChildren={0.04}>
+            {channelCards.map((card) => (
+              <StaggerItem key={card.title}>
+                <article className="channel-card">
+                  <div className="card-head">
+                    <strong>{card.title}</strong>
+                    <span className="badge badge-active">{card.meta}</span>
+                  </div>
+                  <p>{card.description}</p>
+                  <div className="channel-card-actions">
+                    <button type="button">{card.action}</button>
+                    <span className="pill pill-ghost">Evolution ready</span>
+                  </div>
+                </article>
+              </StaggerItem>
+            ))}
+
+            <StaggerItem>
+              <article className="channel-card integrations-card">
+                <div className="card-head">
+                  <strong>Integrações</strong>
+                  <span className="badge badge-draft">Multi canal</span>
+                </div>
+                <p>
+                  Instagram, Facebook, YouTube e Gmail conectados com automações e WhatsApp para
+                  compartilhar campanhas e recursos.
+                </p>
+                <div className="integration-tags">
+                  {integrations.map((integration) => (
+                    <span key={integration} className="pill pill-ghost">
+                      {integration}
+                    </span>
+                  ))}
+                </div>
+                <div className="channel-card-actions">
+                  <button type="button">Sincronizar agora</button>
+                  <span className="pill">Dados instantâneos</span>
+                </div>
+                <ZyrHint
+                  title="Zyr garante contexto de integração"
+                  description="Cada canal precisa mostrar status e próximo passo sem exigir leitura de log."
+                  tips={['Status visível', 'Último sync claro', 'Acione automações específicas']}
+                  className="channel-zyr"
+                />
+              </article>
+            </StaggerItem>
+          </StaggerGroup>
         </section>
       </main>
     </div>
