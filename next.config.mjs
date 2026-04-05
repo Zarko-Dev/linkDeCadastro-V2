@@ -3,6 +3,7 @@ const nextConfig = {
   poweredByHeader: false,
   typedRoutes: true,
   webpack(config) {
+    config.cache = false;
     return config;
   },
   async headers() {

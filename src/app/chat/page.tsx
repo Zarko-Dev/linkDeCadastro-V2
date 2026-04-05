@@ -1,5 +1,5 @@
 import { AppShell } from '@/shared/ui/AppShell';
-import { ChatInboxPage } from '../../domains/chat/ChatInboxPage';
+import { ChatInboxPage } from '@/domains/chat/ChatInboxPage';
 
 export default function Page() {
   return (

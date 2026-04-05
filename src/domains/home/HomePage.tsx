@@ -1,326 +1,162 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 
-import {
-  FadeIn,
-  StaggerGroup,
-  StaggerItem,
-} from '@/shared/ui/motion/MotionPrimitives';
-import {
-  ZyrEmptyState,
-  ZyrErrorState,
-  ZyrHint,
-} from '@/shared/ui/zyr/ZyrStates';
+import { ArrowRight } from 'lucide-react';
 
-const navLinks = [
-  { label: 'Painel', href: '/dashboard' },
-  { label: 'Eventos', href: '/events' },
-  { label: 'Formulários', href: '/form' },
-  { label: 'WhatsApp', href: '/chat' },
-  { label: 'Agentes', href: '/agents' },
-  { label: 'Automações', href: '/automations' },
-  { label: 'Integrações', href: '/integrations' },
-] as const;
+import { FadeIn, StaggerGroup, StaggerItem } from '@/shared/ui/motion/MotionPrimitives';
 
-const heroStats = [
-  { label: 'Eventos em foco', value: '18' },
-  { label: 'Agentes ativos', value: '32' },
-  { label: 'Mensagens/dia', value: '3.4k' },
-] as const;
+import zyrDone from '../../../assets/zyr_concluide.png';
+import zyrTips from '../../../assets/zyr_tips.png';
+import zyrConfused from '../../../assets/zyr_confused.png';
+import zyrLogin from '../../../assets/zyr_login.png';
+import brandLogo from '../../../assets/Logo.png';
 
-const eventHighlights = [
+type NavigationItem = {
+  label: string;
+  href: string;
+  active?: boolean;
+};
+
+const navigation = [
+  { label: 'Home', href: '#inicio', active: true },
+  { label: 'Eventos', href: '#eventos' },
+  { label: 'Formularios', href: '#formularios' },
+  { label: 'Agentes', href: '#agentes' },
+  { label: 'Login', href: '/login' },
+] satisfies readonly NavigationItem[];
+
+const showcase = [
   {
-    title: 'Growth Summit V2',
-    status: 'Ao vivo',
-    participants: '812 inscritos',
-    focus: 'Dashboard prioriza eventos e gatilhos que fecham vendas.',
-    nextStep: 'Roteamento Zyr para o WhatsApp + follow-up automático.',
+    title: 'Eventos',
+    description: 'Dashboard com foco no que esta ao vivo e no proximo passo operacional.',
+    image: zyrTips,
   },
   {
-    title: 'Operação Corona',
-    status: 'Pré-evento',
-    participants: '431 inscritos',
-    focus: 'Fluxo híbrido de clínica + consultoria em campo.',
-    nextStep: 'Formulário condicional com dados de saúde + agenda.',
+    title: 'Formularios',
+    description: 'Builder flexivel para produtor, clinica, barbearia e agendas de servico.',
+    image: zyrConfused,
   },
   {
-    title: 'Barber Lab Meetup',
-    status: 'Planejado',
-    participants: '26 espaços confirmados',
-    focus: 'Captura e indexação de leads com serviço e horário.',
-    nextStep: 'Sincroniza com WhatsApp e agenda pública.',
+    title: 'WhatsApp + IA',
+    description: 'Atendimento, automacoes e agentes em um unico fluxo de acao.',
+    image: zyrLogin,
   },
 ] as const;
-
-const formFields = [
-  { label: 'Nome completo', helper: 'Topo obrigatório para qualquer público.' },
-  { label: 'CPF / documento', helper: 'Pergunta condicional apenas para eventos federais.' },
-  { label: 'Data de nascimento', helper: 'Usada para qualificar jornada.' },
-  { label: 'WhatsApp', helper: 'Conecta ao Evolution e ao CRM.' },
-  { label: 'CEP / estado', helper: 'Dispara segmentação regional.' },
-  { label: 'Cidade / bairro', helper: 'Agenda entrega local e hora.' },
-  { label: 'Produtor ou clinica?', helper: 'Mostra hectares e viveiros quando necessário.' },
-  { label: 'Serviços disponíveis', helper: 'Clinica e barbearia compartilham catálogo e slots.' },
-] as const;
-
-const channelCards = [
-  {
-    title: 'Chat WhatsApp',
-    description:
-      'Inbox operacional com fila, Evolution e controles rápidos para cada lead.',
-    meta: 'Prioriza atendimento humano + IA',
-    action: 'Abrir WhatsApp',
-  },
-  {
-    title: 'Automações',
-    description:
-      'Builder visual que deixa claro: trigger → condição → ação → destino final.',
-    meta: 'Fluxos com IA e workers',
-    action: 'Criar automação',
-  },
-] as const;
-
-const integrations = ['Instagram', 'Facebook', 'YouTube', 'Gmail'] as const;
 
 export function HomePage() {
   return (
-    <div className="home-shell">
-      <header className="home-header">
-        <div className="home-brand">
-          <div className="home-brand-mark">LC</div>
-          <div>
-            <strong>LinkDeCadastro</strong>
-            <p>Workspace V2</p>
-          </div>
-        </div>
-
-        <nav className="home-nav" aria-label="Navegação principal">
-          {navLinks.map((link) => (
-            <Link key={link.href} href={link.href}>
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="home-actions">
-          <Link className="home-panel-link" href="/login">
-            Acessar workspace
+    <div className="zyro-home-shell">
+      <main className="zyro-home-frame">
+        <header className="zyro-home-topbar">
+          <Link href="/" className="zyro-home-brand">
+            <Image src={brandLogo} alt="Logo ZYRO" className="brand-logo-image brand-logo-image-home-hero" priority />
           </Link>
-          <button type="button" className="home-ghost-button">
-            Solicitar demo
-          </button>
-        </div>
-      </header>
 
-      <main className="home-body">
-        <section className="home-hero hero-card">
-          <div className="hero-copy">
+          <nav className="zyro-home-nav" aria-label="Navegacao principal">
+            {navigation.map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className={item.active ? 'is-active' : undefined}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          <Link className="zyro-home-login" href="/login">
+            Fazer login
+          </Link>
+        </header>
+
+        <section className="zyro-home-hero" id="inicio">
+          <div className="zyro-home-copy">
             <FadeIn delay={0.04}>
-              <p className="eyebrow">Workspace de automações</p>
+              <span className="zyro-home-kicker">Plataforma operacional com IA</span>
             </FadeIn>
-
             <FadeIn delay={0.08}>
               <h1>
-                Transforme cliques em sucesso absoluto, com eventos, formulários e chat
-                operando em um único console.
+                ZYRO
+                <span> EVENT FLOW</span>
               </h1>
             </FadeIn>
-
             <FadeIn delay={0.12}>
               <p>
-                A landing page traz a mesma experiência White Paper do painel: fundo branco,
-                cards cinza e hovers púrpura. O Zyr orienta as prioridades, as automações e o
-                WhatsApp tocam em segundo plano.
+                Capte leads, publique formularios inteligentes, priorize eventos e transforme o
+                WhatsApp em um canal de acao com agentes e automacoes.
               </p>
             </FadeIn>
 
-            <div className="hero-cta">
-              <Link className="home-primary-cta" href="/dashboard">
-                Começar gratuitamente
-              </Link>
-              <Link className="home-secondary-cta" href="/events">
-                Ver planos
-              </Link>
-            </div>
+            <FadeIn delay={0.16}>
+              <div className="zyro-home-actions">
+                <Link className="zyro-home-primary" href="/login">
+                  Entrar agora
+                </Link>
+                <a className="zyro-home-arrow" href="#visao-geral" aria-label="Ir para visao geral">
+                  <ArrowRight size={18} />
+                </a>
+              </div>
+            </FadeIn>
 
-            <StaggerGroup className="hero-stats" delayChildren={0.08} staggerChildren={0.04}>
-              {heroStats.map((stat) => (
-                <StaggerItem key={stat.label}>
-                  <div className="stat-card">
-                    <strong>{stat.value}</strong>
-                    <span>{stat.label}</span>
-                  </div>
-                </StaggerItem>
-              ))}
-            </StaggerGroup>
+            <FadeIn delay={0.2}>
+              <div className="zyro-home-ring">
+                <span>events</span>
+                <strong>24/7</strong>
+                <span>agents</span>
+              </div>
+            </FadeIn>
           </div>
 
-          <FadeIn className="hero-panel" delay={0.18}>
-            <div className="hero-panel-head">
-              <span>Dashboard prioriza eventos</span>
-              <span className="badge badge-active">Foco eventos</span>
+          <FadeIn className="zyro-home-visual" delay={0.16}>
+            <div className="zyro-home-visual-card">
+              <Image
+                src={zyrDone}
+                alt="Mascote Zyr como destaque principal da home"
+                className="zyro-home-visual-image"
+                priority
+              />
             </div>
-            <p>
-              O console leva seu cliente direto ao evento ou fluxo que precisa de ação agora.
-              O Zyr destaca o que está acontecendo e o próximo passo.
-            </p>
-            <div className="hero-panel-body">
-              <div>
-                <strong>{eventHighlights[0].title}</strong>
-                <p>{eventHighlights[0].focus}</p>
-              </div>
-              <div>
-                <strong>Próximo passo</strong>
-                <p>{eventHighlights[0].nextStep}</p>
-              </div>
-              <div className="hero-panel-meta">
-                <span>{eventHighlights[0].participants}</span>
-                <span>{eventHighlights[0].status}</span>
-              </div>
-            </div>
-            <ZyrHint
-              title="Zyr orienta o foco"
-              description="Agenda o que precisa de ação hoje e evita que o operador perca eventos em execução."
-              tips={['Mostre o evento vivo no topo', 'Coloque o próximo passo em evidencia', 'Conecte o WhatsApp com o evento']}
-              className="hero-zyr"
-            />
           </FadeIn>
         </section>
 
-        <section className="home-section home-events">
-          <div className="section-head">
-            <span className="eyebrow">Eventos</span>
-            <h2>Dashboard prioriza a exibição de eventos com sinais fortes</h2>
-            <p>
-              Os cards destacam status, intenções e próximos passos. O objetivo é deixar claro o
-              que tocar primeiro e o que precisa de automação.
-            </p>
-          </div>
+        <section className="zyro-home-lower" id="visao-geral">
+          <article className="zyro-home-story">
+            <div className="zyro-home-story-copy">
+              <span className="eyebrow">Visao geral</span>
+              <h2>Uma base unica para captar, atender e agir todos os dias.</h2>
+              <p>
+                O Zyr ajuda a reduzir o atrito entre evento, formulario, inbox, automacao e
+                decisao operacional. Tudo fica mais simples, visivel e pronto para escalar.
+              </p>
+            </div>
 
-          <StaggerGroup className="event-grid" delayChildren={0.08} staggerChildren={0.04}>
-            {eventHighlights.map((event) => (
-              <StaggerItem key={event.title}>
-                <article className="event-card">
-                  <div className="card-head">
-                    <span className="badge badge-active">{event.status}</span>
-                    <strong>{event.title}</strong>
+            <div className="zyro-home-story-links">
+              <span>Eventos ao vivo</span>
+              <span>Formularios editaveis</span>
+              <span>Inbox WhatsApp</span>
+            </div>
+          </article>
+
+          <StaggerGroup className="zyro-home-showcase" delayChildren={0.08} staggerChildren={0.05}>
+            {showcase.map((item) => (
+              <StaggerItem key={item.title}>
+                <article className="zyro-home-showcase-card" id={item.title.toLowerCase().replace(/\s+\+\s+|\s+/g, '-')}>
+                  <div className="zyro-home-showcase-image-wrap">
+                    <Image
+                      src={item.image}
+                      alt={`Ilustracao do modulo ${item.title}`}
+                      className="zyro-home-showcase-image"
+                    />
                   </div>
-                  <p>{event.focus}</p>
-                  <div className="card-meta">
-                    <span>{event.participants}</span>
-                    <span>{event.nextStep}</span>
-                  </div>
-                </article>
-              </StaggerItem>
-            ))}
-
-            <StaggerItem>
-              <ZyrEmptyState
-                title="Zyr aguarda seu próximo evento"
-                description="Quando tudo estiver configurado, esse card vira destaque principal do dashboard."
-                action={<Link href="/events">Criar evento agora</Link>}
-              />
-            </StaggerItem>
-          </StaggerGroup>
-        </section>
-
-        <section className="home-section home-forms">
-          <div className="section-head">
-            <span className="eyebrow">Formulários</span>
-            <h2>Campos editáveis que se moldam ao cliente (produtor, clínica ou barbearia)</h2>
-            <p>
-              O builder permite montar formulários públicos com condições específicas e slots
-              sincronizados com a agenda.
-            </p>
-          </div>
-
-          <div className="form-grid">
-            <article className="form-card">
-              <div className="card-head">
-                <span className="eyebrow">Campos essenciais</span>
-                <strong>Seu formulário vivo</strong>
-              </div>
-              <div className="form-fields">
-                {formFields.map((field) => (
-                  <div key={field.label} className="form-field">
-                    <strong>{field.label}</strong>
-                    <p>{field.helper}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="form-card-actions">
-                <button type="button">Configurar formulário</button>
-                <span className="pill pill-ghost">Compartilhe links no WhatsApp</span>
-              </div>
-            </article>
-
-            <article className="form-card form-card-secondary">
-              <ZyrErrorState
-                title="Zyr detecta campos não tributados"
-                description="Campos condicionais como hectares e viveiros só aparecem quando o cliente marca o tipo certo."
-                action={<Link href="/form">Editar builder</Link>}
-              />
-            </article>
-          </div>
-        </section>
-
-        <section className="home-section home-channel">
-          <div className="section-head">
-            <span className="eyebrow">Canal WhatsApp + automações</span>
-            <h2>Chat, automações e integrações orquestram ações em tempo real</h2>
-            <p>
-              O dashboard conecta o chat, as automações e as integrações em um só fluxo. A cada
-              toque o operador entende o que foi entregue e o que está em execução.
-            </p>
-          </div>
-
-          <StaggerGroup className="channel-grid" delayChildren={0.08} staggerChildren={0.04}>
-            {channelCards.map((card) => (
-              <StaggerItem key={card.title}>
-                <article className="channel-card">
-                  <div className="card-head">
-                    <strong>{card.title}</strong>
-                    <span className="badge badge-active">{card.meta}</span>
-                  </div>
-                  <p>{card.description}</p>
-                  <div className="channel-card-actions">
-                    <button type="button">{card.action}</button>
-                    <span className="pill pill-ghost">Evolution ready</span>
+                  <div className="zyro-home-showcase-copy">
+                    <strong>{item.title}</strong>
+                    <p>{item.description}</p>
                   </div>
                 </article>
               </StaggerItem>
             ))}
-
-            <StaggerItem>
-              <article className="channel-card integrations-card">
-                <div className="card-head">
-                  <strong>Integrações</strong>
-                  <span className="badge badge-draft">Multi canal</span>
-                </div>
-                <p>
-                  Instagram, Facebook, YouTube e Gmail conectados com automações e WhatsApp para
-                  compartilhar campanhas e recursos.
-                </p>
-                <div className="integration-tags">
-                  {integrations.map((integration) => (
-                    <span key={integration} className="pill pill-ghost">
-                      {integration}
-                    </span>
-                  ))}
-                </div>
-                <div className="channel-card-actions">
-                  <button type="button">Sincronizar agora</button>
-                  <span className="pill">Dados instantâneos</span>
-                </div>
-                <ZyrHint
-                  title="Zyr garante contexto de integração"
-                  description="Cada canal precisa mostrar status e próximo passo sem exigir leitura de log."
-                  tips={['Status visível', 'Último sync claro', 'Acione automações específicas']}
-                  className="channel-zyr"
-                />
-              </article>
-            </StaggerItem>
           </StaggerGroup>
         </section>
       </main>

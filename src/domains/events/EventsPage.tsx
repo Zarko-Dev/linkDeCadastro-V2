@@ -1,8 +1,18 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
+import {
+  CalendarDays,
+  ExternalLink,
+  Link2,
+  MessageCircle,
+  Pencil,
+  Plus,
+  Search,
+  Users,
+} from 'lucide-react';
+
 import { apiFetch } from '@/shared/lib/api';
-import { FadeIn, StaggerGroup, StaggerItem } from '@/shared/ui/motion/MotionPrimitives';
 
 type EventItem = {
   id: string;
@@ -38,6 +48,8 @@ type EventFilters = {
   pageSize: number;
 };
 
+type EventType = 'Carcinicultura' | 'Comercial' | 'Capacitação' | 'Operacional';
+
 const defaultFilters: EventFilters = {
   search: '',
   status: '',
@@ -45,12 +57,12 @@ const defaultFilters: EventFilters = {
   pageSize: 6,
 };
 
-function eventBadgeClass(status: string) {
-  if (status === 'ACTIVE') return 'badge badge-active';
-  if (status === 'CLOSED') return 'badge badge-inactive';
-  if (status === 'INACTIVE') return 'badge badge-draft';
-  return 'badge badge-draft';
-}
+const typeToTemplate: Record<EventType, string> = {
+  Carcinicultura: 'Formulário Carcinicultura',
+  Comercial: 'Formulário Comercial',
+  Capacitação: 'Formulário de Inscrição Técnica',
+  Operacional: 'Formulário Operacional',
+};
 
 function createQuery(filters: EventFilters) {
   const params = new URLSearchParams();
@@ -63,26 +75,47 @@ function createQuery(filters: EventFilters) {
   return params.toString();
 }
 
+function statusLabel(status: string) {
+  if (status === 'ACTIVE') return 'ATIVO';
+  if (status === 'INACTIVE') return 'INATIVO';
+  if (status === 'CLOSED') return 'FINAL';
+  return status;
+}
+
+function statusClass(status: string) {
+  if (status === 'ACTIVE') return 'event-center-status is-active';
+  if (status === 'CLOSED') return 'event-center-status is-final';
+  return 'event-center-status is-inactive';
+}
+
+function inferType(index: number): EventType {
+  const types: EventType[] = ['Carcinicultura', 'Comercial', 'Capacitação', 'Operacional'];
+  return types[index % types.length];
+}
+
+function inferRegistrations(item: EventItem, index: number) {
+  if (item.maxRegistrations) {
+    return Math.min(item.maxRegistrations, (index + 1) * 3);
+  }
+
+  return (index % 4) * 3;
+}
+
 export function EventsPage() {
   const [data, setData] = useState<EventsResponse | null>(null);
   const [filters, setFilters] = useState<EventFilters>(defaultFilters);
   const [searchDraft, setSearchDraft] = useState('');
   const [statusMessage, setStatusMessage] = useState('Carregando eventos...');
-  const [loading, setLoading] = useState(true);
 
   async function refresh(nextFilters: EventFilters = filters) {
-    setLoading(true);
-    const query = createQuery(nextFilters);
-    const response = await apiFetch<EventsResponse>(`/v2/events?${query}`);
+    const response = await apiFetch<EventsResponse>(`/v2/events?${createQuery(nextFilters)}`);
     setData(response);
-    setStatusMessage(`Total: ${response.meta.total}`);
-    setLoading(false);
+    setStatusMessage(`Total de eventos: ${response.meta.total}`);
   }
 
   useEffect(() => {
     refresh().catch(() => {
       setData(null);
-      setLoading(false);
       setStatusMessage('Falha ao carregar eventos');
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -93,166 +126,173 @@ export function EventsPage() {
     setFilters((current) => ({ ...current, search: searchDraft, page: 1 }));
   }
 
-  function nextPage() {
-    setFilters((current) => ({
-      ...current,
-      page: Math.min(current.page + 1, data?.meta.totalPages || current.page + 1),
-    }));
-  }
-
-  function previousPage() {
-    setFilters((current) => ({ ...current, page: Math.max(1, current.page - 1) }));
-  }
-
-  const events = data?.items ?? [];
+  const events = useMemo(() => {
+    return (data?.items ?? []).map((item, index) => {
+      const eventType = inferType(index);
+      return {
+        ...item,
+        registrations: inferRegistrations(item, index),
+        eventType,
+        formTemplate: typeToTemplate[eventType],
+        createdAt: ['25/03/2026', '23/03/2026', '08/03/2026', '02/03/2026'][index % 4],
+      };
+    });
+  }, [data]);
 
   return (
-    <section className="hero-surface wide-page">
-      <div className="dashboard-grid">
-        <div className="stack">
-          <FadeIn delay={0.05}>
-            <p className="eyebrow">Core</p>
-          </FadeIn>
-          <FadeIn delay={0.1}>
-            <h2>Eventos</h2>
-          </FadeIn>
-          <FadeIn delay={0.15}>
-            <p>
-              Leitura pública do core com eventos, status, limite e criador. A tela já reflete
-              o contrato da V2 e permite filtrar o catálogo por busca e estado.
-            </p>
-          </FadeIn>
-          <div className="summary-row">
-            <div className="pill">{statusMessage}</div>
-            <div className="pill pill-ghost">
-              Página {data?.meta.page ?? filters.page}/{data?.meta.totalPages ?? 0}
-            </div>
-            <div className="pill pill-ghost">Inscrições</div>
-          </div>
+    <section className="event-center-page">
+      <header className="event-center-hero">
+        <div className="event-center-copy">
+          <h1>
+            Gestão de <span>Eventos</span>
+          </h1>
+          <p>Links de cadastro e controle de presença para seus eventos.</p>
         </div>
 
-        <div className="workspace-side-stack">
-          <div className="panel panel-accent">
-            <strong>Controle visual</strong>
-            <p>
-              O preview precisa mostrar a leitura editorial do evento sem esconder o estado
-              operacional.
-            </p>
-          </div>
-          <div className="panel">
-            <strong>Contrato real</strong>
-            <p>
-              O backend entrega `linkId`, `creator` e `maxRegistrations`, então a página
-              espelha esses campos diretamente.
-            </p>
-          </div>
-        </div>
-      </div>
+        <button className="event-center-primary-btn" type="button">
+          <Plus size={16} />
+          Novo evento
+        </button>
+      </header>
 
-      <form className="panel form-grid" onSubmit={applySearch} style={{ marginTop: 18 }}>
-        <div className="panel-head">
-          <strong>Filtros dos eventos</strong>
-          <span className="pill pill-ghost">
-            {loading ? 'Carregando...' : `${events.length} itens`}
-          </span>
-        </div>
-        <div className="builder-layout">
-          <label className="field-block">
-            <span>Busca</span>
-            <input
-              value={searchDraft}
-              onChange={(event) => setSearchDraft(event.target.value)}
-              placeholder="Titulo, slug, linkId ou descricao"
-            />
-          </label>
-          <label className="field-block">
-            <span>Status</span>
-            <select
-              value={filters.status}
-              onChange={(event) =>
-                setFilters((current) => ({ ...current, status: event.target.value, page: 1 }))
-              }
-            >
-              <option value="">Todos</option>
-              <option value="ACTIVE">ACTIVE</option>
-              <option value="INACTIVE">INACTIVE</option>
-              <option value="CLOSED">CLOSED</option>
-            </select>
-          </label>
-          <label className="field-block">
-            <span>Itens por página</span>
-            <select
-              value={filters.pageSize}
-              onChange={(event) =>
-                setFilters((current) => ({ ...current, pageSize: Number(event.target.value), page: 1 }))
-              }
-            >
-              <option value={6}>6</option>
-              <option value={12}>12</option>
-              <option value={24}>24</option>
-            </select>
-          </label>
-          <div className="summary-row" style={{ alignSelf: 'end' }}>
-            <button type="submit">Aplicar busca</button>
+      <form className="event-center-toolbar" onSubmit={applySearch}>
+        <label className="event-center-search">
+          <Search size={16} />
+          <input
+            value={searchDraft}
+            onChange={(event) => setSearchDraft(event.target.value)}
+            placeholder="Pesquisar evento, descrição ou slug..."
+          />
+        </label>
+
+        <div className="event-center-filters">
+          {[
+            { label: 'Todos', value: '' },
+            { label: 'Ativos', value: 'ACTIVE' },
+            { label: 'Inativos', value: 'INACTIVE' },
+            { label: 'Finais', value: 'CLOSED' },
+          ].map((item) => (
             <button
+              key={item.label}
               type="button"
-              onClick={() => {
-                setSearchDraft('');
-                setFilters(defaultFilters);
-              }}
+              className={filters.status === item.value ? 'event-center-filter is-active' : 'event-center-filter'}
+              onClick={() => setFilters((current) => ({ ...current, status: item.value, page: 1 }))}
             >
-              Limpar
+              {item.label}
             </button>
-          </div>
+          ))}
         </div>
       </form>
 
-      <div className="summary-row" style={{ marginTop: 12 }}>
-        <button type="button" onClick={previousPage} disabled={filters.page <= 1}>
-          Página anterior
-        </button>
-        <div className="pill pill-ghost">
-          Página {data?.meta.page ?? filters.page} de {data?.meta.totalPages ?? 0}
+      <section className="event-center-table-panel">
+        <div className="event-center-table-head">
+          <span>Informações do evento</span>
+          <span>Inscritos</span>
+          <span>Status</span>
+          <span>Data de criação</span>
+          <span>Ações</span>
         </div>
-        <button
-          type="button"
-          onClick={nextPage}
-          disabled={Boolean(data && filters.page >= data.meta.totalPages)}
-        >
-          Próxima página
-        </button>
-      </div>
 
-      <StaggerGroup className="feature-grid" delayChildren={0.12} staggerChildren={0.08}>
-        {events.map((event) => (
-          <StaggerItem key={event.id}>
-            <article className="panel panel-accent">
-              <div className="panel-head">
-                <strong>{event.title}</strong>
-                <span className={eventBadgeClass(event.status)}>{event.status}</span>
-              </div>
-              <p>{event.description || 'Sem descrição cadastrada.'}</p>
-              <div className="summary-row">
-                <span className="pill pill-ghost">{event.slug}</span>
-                <span className="pill pill-ghost">{event.linkId}</span>
-              </div>
-              <div className="summary-row" style={{ marginTop: '0.75rem' }}>
-                <span className="pill pill-ghost">
-                  {event.creator?.name || 'Criador não informado'}
-                </span>
-                <span className="pill pill-ghost">
-                  {event.maxRegistrations ? `Vagas ${event.maxRegistrations}` : 'Sem limite'}
-                </span>
-              </div>
-              {event.bannerUrl ? (
-                <div className="summary-row" style={{ marginTop: '0.5rem' }}>
-                  <span className="pill pill-ghost">Banner vinculado</span>
+        <div className="event-center-list">
+          {events.map((event, index) => (
+            <article key={event.id} className="event-center-row">
+              <div className="event-center-main">
+                <div className="event-center-thumb">
+                  {event.bannerUrl ? (
+                    <img src={event.bannerUrl} alt={event.title} />
+                  ) : (
+                    <CalendarDays size={18} />
+                  )}
                 </div>
-              ) : null}
+
+                <div className="event-center-details">
+                  <strong>{event.title}</strong>
+                  <small>/{event.slug}</small>
+                  <p>{event.description || 'Evento pronto para inscrições, turmas e comunicação.'}</p>
+                  <div className="event-center-meta">
+                    <span>{event.eventType}</span>
+                    <span>{event.formTemplate}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="event-center-registrations">
+                <strong>{event.registrations}</strong>
+                <small>check-ins</small>
+              </div>
+
+              <div>
+                <span className={statusClass(event.status)}>{statusLabel(event.status)}</span>
+              </div>
+
+              <div className="event-center-date">{event.createdAt}</div>
+
+              <div className="event-center-actions">
+                <button type="button">
+                  <Users size={14} />
+                  Registros
+                </button>
+                <button type="button">
+                  <CalendarDays size={14} />
+                  Turmas
+                </button>
+                <button type="button">
+                  <Link2 size={14} />
+                  Link
+                </button>
+                <button type="button">
+                  <MessageCircle size={14} />
+                  WhatsApp
+                </button>
+                <button type="button" className="is-warn">
+                  <Pencil size={14} />
+                  Editar
+                </button>
+                <button type="button" className="is-soft">
+                  Ativar
+                </button>
+                <button type="button" className="is-danger">
+                  Encerrar
+                </button>
+              </div>
             </article>
-          </StaggerItem>
-        ))}
-      </StaggerGroup>
+          ))}
+        </div>
+      </section>
+
+      <section className="event-center-bottom">
+        <article className="event-center-cta-card is-dark">
+          <div>
+            <strong>Novo lançamento?</strong>
+            <p>Crie um link de captura rápida e comece a receber inscritos em segundos.</p>
+          </div>
+          <button type="button">Criar agora +</button>
+        </article>
+
+        <article className="event-center-cta-card">
+          <div>
+            <strong>Formulários por tipo de evento</strong>
+            <p>
+              Você pode criar um formulário específico para um tipo de evento, como
+              `Evento Carcinicultura`, e reutilizar esse mesmo formulário em novos eventos.
+            </p>
+          </div>
+          <button type="button">
+            Reusar formulário <ExternalLink size={14} />
+          </button>
+        </article>
+      </section>
+
+      <article className="event-center-note">
+        <strong>Como funciona o builder por evento</strong>
+        <p>
+          O formulário é personalizado por evento ou por tipo de evento. Exemplo: você cria um
+          formulário para `Evento Carcinicultura` com os campos que precisa; depois, ao cadastrar
+          um novo evento desse tipo, basta selecionar o formulário já criado em vez de montar tudo
+          novamente.
+        </p>
+        <span>{statusMessage}</span>
+      </article>
     </section>
   );
 }

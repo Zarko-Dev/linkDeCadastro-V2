@@ -1,9 +1,23 @@
 'use client';
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { apiFetch } from '@/shared/lib/api';
-import { FadeIn, StaggerGroup, StaggerItem } from '@/shared/ui/motion/MotionPrimitives';
-import { ZyrHint } from '@/shared/ui/zyr/ZyrStates';
+import {
+  Bell,
+  Building2,
+  CalendarDays,
+  CircleHelp,
+  Clock3,
+  DollarSign,
+  FileText,
+  MoreVertical,
+  Paperclip,
+  Search,
+  SendHorizontal,
+  Sparkles,
+  UserRound,
+} from 'lucide-react';
+
+import { apiFetch, ApiFetchError } from '@/shared/lib/api';
 
 type ConversationsResponse = {
   items: Array<{
@@ -46,25 +60,9 @@ type SendTextForm = {
   linkPreview: boolean;
 };
 
-type CampaignForm = {
-  instance: string;
-  recipients: string;
-  text: string;
-  delay: string;
-  linkPreview: boolean;
-};
-
 const defaultSendTextForm: SendTextForm = {
   instance: '',
   number: '',
-  text: '',
-  delay: '0',
-  linkPreview: true,
-};
-
-const defaultCampaignForm: CampaignForm = {
-  instance: '',
-  recipients: '5511999999999, Joao Silva\n5511888888888, Maria Souza',
   text: '',
   delay: '0',
   linkPreview: true,
@@ -75,9 +73,8 @@ export function ChatInboxPage() {
   const [queue, setQueue] = useState<QueueStatusResponse | null>(null);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [sendTextForm, setSendTextForm] = useState<SendTextForm>(defaultSendTextForm);
-  const [campaignForm, setCampaignForm] = useState<CampaignForm>(defaultCampaignForm);
   const [sendTextMessage, setSendTextMessage] = useState('Carregando inbox...');
-  const [campaignMessage, setCampaignMessage] = useState('Carregando campanhas...');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'ai'>('all');
 
   async function refresh() {
     const [conversations, queueStatus] = await Promise.all([
@@ -92,31 +89,45 @@ export function ChatInboxPage() {
 
   useEffect(() => {
     refresh()
-      .then(() => {
-        setSendTextMessage('Pronto para enviar mensagens via Evolution.');
-        setCampaignMessage('Pronto para campanhas em fila.');
-      })
+      .then(() => setSendTextMessage('Pronto para enviar mensagens via Evolution.'))
       .catch((error: { message?: string }) => {
-        const message = error?.message || 'Falha ao carregar o chat.';
-        setSendTextMessage(message);
-        setCampaignMessage(message);
+        setSendTextMessage(error?.message || 'Falha ao carregar o chat.');
       });
   }, []);
+
+  const selectedConversation =
+    data?.items.find((item) => item.id === selectedConversationId) || data?.items[0] || null;
+
+  const filteredConversations = useMemo(() => {
+    const items = data?.items || [];
+
+    if (activeFilter === 'unread') {
+      return items.filter((item) => (item.unreadCount || 0) > 0);
+    }
+
+    if (activeFilter === 'ai') {
+      return items.filter((item) => (item.attendanceMode || '').toLowerCase().includes('ai'));
+    }
+
+    return items;
+  }, [activeFilter, data]);
 
   const queueSummary = useMemo(() => {
     if (!queue) return 'Fila indisponivel';
 
     const totalQueued = queue.queues.reduce((sum, item) => sum + item.queued, 0);
-    const totalProcessing = queue.queues.reduce((sum, item) => sum + item.processing, 0);
-    const totalFailed = queue.queues.reduce((sum, item) => sum + item.failed, 0);
 
-    return `${queue.status} | ${totalQueued} na fila | ${totalProcessing} processando | ${totalFailed} falhas`;
+    return `${queue.status} • ${totalQueued} pendencias`;
   }, [queue]);
 
-  const selectedConversation =
-    data?.items.find((item) => item.id === selectedConversationId) || data?.items[0] || null;
+  useEffect(() => {
+    if (!selectedConversation?.contactNumber) return;
 
-  const queueQueueCard = queue?.queues[0];
+    setSendTextForm((current) => ({
+      ...current,
+      number: selectedConversation.contactNumber || '',
+    }));
+  }, [selectedConversation?.contactNumber]);
 
   async function handleSendTextSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -137,305 +148,266 @@ export function ChatInboxPage() {
       });
 
       setSendTextMessage(`Job ${result.jobId} aceito. O Evolution vai processar em segundo plano.`);
-      setSendTextForm(defaultSendTextForm);
+      setSendTextForm((current) => ({
+        ...current,
+        text: '',
+        delay: '0',
+        linkPreview: true,
+      }));
       await refresh();
-    } catch (error: any) {
-      setSendTextMessage(error?.message || 'Falha ao enviar mensagem.');
-    }
-  }
-
-  async function handleCampaignSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setCampaignMessage('Enfileirando campanha...');
-
-    try {
-      const recipients = campaignForm.recipients
-        .split('\n')
-        .map((line) => line.trim())
-        .filter(Boolean)
-        .map((line) => {
-          const [number, ...nameParts] = line.split(',');
-          return {
-            number: number.trim(),
-            name: nameParts.join(',').trim() || undefined,
-          };
-        })
-        .filter((recipient) => recipient.number.length > 0);
-
-      const payload = {
-        instance: campaignForm.instance || undefined,
-        text: campaignForm.text.trim(),
-        recipients,
-        delay: Number(campaignForm.delay || 0),
-        linkPreview: campaignForm.linkPreview,
-      };
-
-      const result = await apiFetch<JobResponse>('/v2/chat/campaigns/send', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      });
-
-      setCampaignMessage(`Campanha aceita como job ${result.jobId}.`);
-      setCampaignForm(defaultCampaignForm);
-      await refresh();
-    } catch (error: any) {
-      setCampaignMessage(error?.message || 'Falha ao enfileirar campanha.');
+    } catch (error) {
+      setSendTextMessage(error instanceof ApiFetchError ? error.message : 'Falha ao enviar mensagem.');
     }
   }
 
   return (
-    <section className="wide-page chat-layout">
-      <div className="dashboard-grid">
-        <div className="stack">
-          <FadeIn delay={0.04}>
-            <p className="eyebrow">WhatsApp chat</p>
-          </FadeIn>
-          <FadeIn delay={0.08}>
-            <h2>Inbox operacional para leads, campanhas e handoff.</h2>
-          </FadeIn>
-          <FadeIn delay={0.12}>
-            <p>
-              No celular, a thread precisa ser facil de abrir e agir. No desktop, o mesmo fluxo
-              ganha contexto de fila, historico e composer sem parecer um painel antigo.
-            </p>
-          </FadeIn>
-
-          <div className="quick-actions">
-            <div className="quick-action">
-              <span className="quick-action-label">Inbox</span>
-              <span className="quick-action-meta">{data?.meta.total || 0} conversas ativas.</span>
-            </div>
-            <div className="quick-action">
-              <span className="quick-action-label">Fila</span>
-              <span className="quick-action-meta">{queueSummary}</span>
-            </div>
-            <div className="quick-action">
-              <span className="quick-action-label">Evolution</span>
-              <span className="quick-action-meta">Envio e status em segundo plano.</span>
-            </div>
-            <div className="quick-action">
-              <span className="quick-action-label">Zyr</span>
-              <span className="quick-action-meta">Ajuda com triagem, tom e proximo passo.</span>
-            </div>
+    <section className="wppdesk-page">
+      <div className="wppdesk-shell">
+        <aside className="wppdesk-sidebar">
+          <div className="wppdesk-search">
+            <Search size={16} />
+            <input placeholder="Buscar conversas..." />
           </div>
-        </div>
 
-        <div className="workspace-side-stack">
-          <div className="pill">{queueSummary}</div>
-          <div className="panel panel-accent">
-            <strong>Modelo de acao</strong>
-            <p>
-              Cada thread precisa mostrar fila, status e contexto para o operador agir sem sair
-              da plataforma.
-            </p>
-          </div>
-          <ZyrHint
-            title="Zyr ajuda a decidir o proximo passo"
-            description="Quando a conversa pede contexto, o Zyr pode sugerir se o melhor movimento e responder, escalar, agendar ou disparar campanha."
-            tips={[
-              'mantenha o inbox como a superficie principal no mobile',
-              'diferencie mensagem manual de campanha em fila',
-              'sempre mostre status, unread e worker associado',
-            ]}
-          />
-          <div className="panel">
-            <strong>Workers ativos</strong>
-            <p className="muted">
-              {queue?.workers?.length ? queue.workers.join(' | ') : 'Nenhum worker registrado ainda'}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="chat-board">
-        <article className="panel chat-conversation-list">
-          <div className="panel-head">
+          <div className="wppdesk-sidebar-head">
             <div>
-              <strong>Conversas</strong>
-              <p className="muted">Selecione uma thread para inspecionar o fluxo operacional.</p>
+              <strong>Inbox</strong>
+              <span>{filteredConversations.length} conversas visiveis</span>
             </div>
-            <span className="badge badge-active">Inbox ativo</span>
+            <span className="wppdesk-count-pill">{data?.meta.total ?? 0} ativas</span>
           </div>
 
-          <StaggerGroup className="stack" delayChildren={0.08} staggerChildren={0.06}>
-            {(data?.items || []).map((conversation) => (
-              <StaggerItem key={conversation.id}>
+          <div className="wppdesk-filter-row">
+            <button
+              type="button"
+              onClick={() => setActiveFilter('all')}
+              className={activeFilter === 'all' ? 'wppdesk-filter is-active' : 'wppdesk-filter'}
+            >
+              Todos
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveFilter('unread')}
+              className={activeFilter === 'unread' ? 'wppdesk-filter is-active' : 'wppdesk-filter'}
+            >
+              Nao lidos
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveFilter('ai')}
+              className={activeFilter === 'ai' ? 'wppdesk-filter is-active' : 'wppdesk-filter'}
+            >
+              IA ativa
+            </button>
+          </div>
+
+          <div className="wppdesk-conversation-list">
+            {filteredConversations.map((conversation) => {
+              const isActive = selectedConversationId === conversation.id;
+              const label = conversation.contactName || conversation.contactNumber || 'Contato';
+
+              return (
                 <button
+                  key={conversation.id}
                   type="button"
                   onClick={() => setSelectedConversationId(conversation.id)}
-                  className={`conversation-card conversation-select interactive-card ${
-                    selectedConversationId === conversation.id ? 'is-selected' : ''
-                  }`}
+                  className={isActive ? 'wppdesk-conversation is-active' : 'wppdesk-conversation'}
                 >
-                  <div className="conversation-top">
-                    <strong>{conversation.contactName || conversation.contactNumber}</strong>
-                    <span className="pill">{conversation.status || 'OPEN'}</span>
-                  </div>
-                  <p>{conversation.lastMessage || 'Sem ultima mensagem.'}</p>
-                  <small>
-                    {conversation.attendanceMode || 'N/A'} | {conversation.unreadCount || 0} nao lidas
-                  </small>
+                  <span className="wppdesk-avatar">{label.charAt(0)}</span>
+                  <span className="wppdesk-conversation-copy">
+                    <span className="wppdesk-conversation-top">
+                      <strong>{label}</strong>
+                      <small>{(conversation.unreadCount || 0) > 0 ? 'Agora' : '14:22'}</small>
+                    </span>
+                    <span className="wppdesk-conversation-text">
+                      {conversation.lastMessage || 'Sem ultima mensagem.'}
+                    </span>
+                  </span>
                 </button>
-              </StaggerItem>
-            ))}
-          </StaggerGroup>
-        </article>
+              );
+            })}
+          </div>
+        </aside>
 
-        <article className="panel chat-thread">
-          <div className="panel-head">
-            <div>
-              <strong>Preview da thread</strong>
-              <p className="muted" style={{ marginTop: 6 }}>
-                {selectedConversation
-                  ? `${selectedConversation.contactName || selectedConversation.contactNumber} | ${selectedConversation.status || 'OPEN'}`
-                  : 'Nenhuma conversa selecionada'}
-              </p>
+        <main className="wppdesk-thread">
+          <header className="wppdesk-thread-topbar">
+            <div className="wppdesk-thread-actions-left">
+              <button type="button" className="wppdesk-icon-btn" aria-label="Notificacoes">
+                <Bell size={16} />
+              </button>
+              <button type="button" className="wppdesk-icon-btn" aria-label="Ajuda">
+                <CircleHelp size={16} />
+              </button>
             </div>
-            <span className="badge badge-active">Painel ativo</span>
+
+            <div className="wppdesk-thread-status">
+              <span>WhatsApp Cloud</span>
+              <i />
+            </div>
+          </header>
+
+          <div className="wppdesk-thread-header">
+            <div className="wppdesk-thread-contact">
+              <span className="wppdesk-avatar large">
+                {(selectedConversation?.contactName || selectedConversation?.contactNumber || 'C')
+                  .charAt(0)
+                  .toUpperCase()}
+              </span>
+              <div>
+                <strong>
+                  {selectedConversation?.contactName || selectedConversation?.contactNumber || 'Contato'}
+                </strong>
+                <span>
+                  Agente IA • {selectedConversation?.status || 'RESPONDENDO'}
+                </span>
+              </div>
+            </div>
+
+            <div className="wppdesk-thread-toolbar">
+              <button type="button" className="wppdesk-pill-btn">
+                Pausar IA
+              </button>
+              <button type="button" className="wppdesk-icon-btn">
+                <Search size={16} />
+              </button>
+              <button type="button" className="wppdesk-icon-btn">
+                <MoreVertical size={16} />
+              </button>
+            </div>
           </div>
 
-          <div className="stack">
-            <div className="thread-message thread-message-in">
-              <strong>Lead</strong>
-              <p>Oi, preciso de ajuda com cadastro e acesso.</p>
-            </div>
-            <div className="thread-message thread-message-out">
-              <strong>Operador</strong>
-              <p>Perfeito, vou encaminhar para o fluxo e agente certo.</p>
-            </div>
-            <div className="thread-message thread-message-system">
-              <strong>Sistema</strong>
+          <div className="wppdesk-chat-area">
+            <article className="wppdesk-message incoming">
               <p>
-                O status da fila fica visivel na lateral e a conversa permanece vinculada ao
-                workspace operacional.
+                O historico detalhado de mensagens ainda nao esta exposto pela API deste ambiente.
+                A lista de conversas, a fila e o envio real ja funcionam.
               </p>
+              <div className="wppdesk-message-meta">
+                <span>Sistema</span>
+                <small>{queueSummary}</small>
+              </div>
+            </article>
+
+            <article className="wppdesk-message outgoing">
+              <p>
+                {selectedConversation?.lastMessage ||
+                  'Selecione uma conversa para ver o contexto resumido.'}
+              </p>
+              <div className="wppdesk-message-meta">
+                <span>Preview</span>
+                <small>{selectedConversation?.attendanceMode || 'Sem modo informado'}</small>
+              </div>
+            </article>
+          </div>
+
+          <div className="wppdesk-quick-actions">
+            <button type="button">Enviar template</button>
+            <button type="button">Mover para CRM</button>
+            <button type="button">Anexar</button>
+          </div>
+
+          <form onSubmit={handleSendTextSubmit} className="wppdesk-composer">
+            <input
+              value={sendTextForm.text}
+              onChange={(event) =>
+                setSendTextForm((current) => ({ ...current, text: event.target.value }))
+              }
+              placeholder="Digite sua mensagem aqui..."
+            />
+            <div className="wppdesk-composer-actions">
+              <button type="button" className="wppdesk-icon-btn" aria-label="Anexar">
+                <Paperclip size={16} />
+              </button>
+              <button type="submit" className="wppdesk-send-btn" aria-label="Enviar">
+                <SendHorizontal size={18} />
+              </button>
+            </div>
+          </form>
+
+          <p className="wppdesk-composer-feedback" aria-live="polite">
+            {sendTextMessage} | {queueSummary}
+          </p>
+        </main>
+
+        <aside className="wppdesk-profile">
+          <div className="wppdesk-profile-card">
+            <div className="wppdesk-profile-avatar">
+              {(selectedConversation?.contactName || selectedConversation?.contactNumber || 'C')
+                .charAt(0)
+                .toUpperCase()}
+            </div>
+            <strong>{selectedConversation?.contactName || 'Contato sem nome'}</strong>
+            <span>{selectedConversation?.contactNumber || 'Sem numero informado'}</span>
+          </div>
+
+          <div className="wppdesk-profile-stats">
+            <article>
+              <small>Status</small>
+              <strong>{selectedConversation?.status || 'Sem status'}</strong>
+            </article>
+            <article>
+              <small>Fila</small>
+              <strong>{queue?.status || 'Indisponivel'}</strong>
+            </article>
+          </div>
+
+          <div className="wppdesk-info-card">
+            <span>Contexto real</span>
+            <ul>
+              <li>
+                <Building2 size={15} />
+                <div>
+                  <small>Conversa</small>
+                  <strong>{selectedConversation?.contactName || 'Sem nome'}</strong>
+                </div>
+              </li>
+              <li>
+                <FileText size={15} />
+                <div>
+                  <small>Ultima mensagem</small>
+                  <strong>{selectedConversation?.lastMessage || 'Nao informada'}</strong>
+                </div>
+              </li>
+              <li>
+                <UserRound size={15} />
+                <div>
+                  <small>Modo de atendimento</small>
+                  <strong>{selectedConversation?.attendanceMode || 'Nao informado'}</strong>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <div className="wppdesk-info-card">
+            <span>Fila Evolution</span>
+            <div className="wppdesk-tag-list">
+              <span>{queue?.workers.length || 0} workers</span>
+              <span>{queue?.queues.length || 0} filas</span>
             </div>
           </div>
-        </article>
 
-        <div className="workspace-side-stack">
-          <article className="panel form-card sticky-panel">
-            <strong>Enviar texto</strong>
-            <form className="stack form-grid" onSubmit={handleSendTextSubmit}>
-              <input
-                value={sendTextForm.instance}
-                onChange={(event) =>
-                  setSendTextForm((current) => ({ ...current, instance: event.target.value }))
-                }
-                placeholder="Instancia opcional"
-              />
-              <input
-                value={sendTextForm.number}
-                onChange={(event) =>
-                  setSendTextForm((current) => ({ ...current, number: event.target.value }))
-                }
-                placeholder="Numero com DDI"
-              />
-              <textarea
-                value={sendTextForm.text}
-                onChange={(event) =>
-                  setSendTextForm((current) => ({ ...current, text: event.target.value }))
-                }
-                placeholder="Mensagem"
-                rows={5}
-              />
-              <div className="field-row">
-                <input
-                  value={sendTextForm.delay}
-                  onChange={(event) =>
-                    setSendTextForm((current) => ({ ...current, delay: event.target.value }))
-                  }
-                  placeholder="Delay"
-                  type="number"
-                  min="0"
-                />
-                <label className="checkbox">
-                  <input
-                    checked={sendTextForm.linkPreview}
-                    onChange={(event) =>
-                      setSendTextForm((current) => ({
-                        ...current,
-                        linkPreview: event.target.checked,
-                      }))
-                    }
-                    type="checkbox"
-                  />
-                  Preview de link
-                </label>
-              </div>
-              <button type="submit">Enviar via Evolution</button>
-            </form>
-            <p className="muted" aria-live="polite">
-              {sendTextMessage}
-            </p>
-          </article>
-
-          <article className="panel form-card">
-            <strong>Fila de campanha</strong>
-            <form className="stack form-grid" onSubmit={handleCampaignSubmit}>
-              <input
-                value={campaignForm.instance}
-                onChange={(event) =>
-                  setCampaignForm((current) => ({ ...current, instance: event.target.value }))
-                }
-                placeholder="Instancia opcional"
-              />
-              <textarea
-                value={campaignForm.recipients}
-                onChange={(event) =>
-                  setCampaignForm((current) => ({ ...current, recipients: event.target.value }))
-                }
-                placeholder="Um contato por linha: numero, nome"
-                rows={5}
-              />
-              <textarea
-                value={campaignForm.text}
-                onChange={(event) =>
-                  setCampaignForm((current) => ({ ...current, text: event.target.value }))
-                }
-                placeholder="Texto da campanha"
-                rows={5}
-              />
-              <div className="field-row">
-                <input
-                  value={campaignForm.delay}
-                  onChange={(event) =>
-                    setCampaignForm((current) => ({ ...current, delay: event.target.value }))
-                  }
-                  placeholder="Delay"
-                  type="number"
-                  min="0"
-                />
-                <label className="checkbox">
-                  <input
-                    checked={campaignForm.linkPreview}
-                    onChange={(event) =>
-                      setCampaignForm((current) => ({
-                        ...current,
-                        linkPreview: event.target.checked,
-                      }))
-                    }
-                    type="checkbox"
-                  />
-                  Preview de link
-                </label>
-              </div>
-              <button type="submit">Enviar campanha</button>
-            </form>
-            <p className="muted" aria-live="polite">
-              {campaignMessage}
-            </p>
-          </article>
-
-          <article className="panel">
-            <strong>Fila e workers</strong>
-            <p className="muted">
-              {queueQueueCard
-                ? `${queueQueueCard.name} | ${queueQueueCard.queued} na fila | ${queueQueueCard.processing} processando`
-                : 'Fila nao disponivel ainda'}
-            </p>
-          </article>
-        </div>
+          <div className="wppdesk-info-card">
+            <span>Atalhos</span>
+            <div className="wppdesk-shortcuts">
+              <button type="button">
+                <CalendarDays size={15} />
+                Agenda
+              </button>
+              <button type="button">
+                <DollarSign size={15} />
+                Fatura
+              </button>
+              <button type="button">
+                <Clock3 size={15} />
+                Logs
+              </button>
+              <button type="button">
+                <Sparkles size={15} />
+                Builder
+              </button>
+            </div>
+          </div>
+        </aside>
       </div>
     </section>
   );

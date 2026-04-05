@@ -12,6 +12,7 @@ Organizar a construção do frontend V2 por agentes especializados, com papéis 
 - `front-security-agent.md`
 - `front-shell-agent.md`
 - `front-design-system-agent.md`
+- `front-screen-agent.md`
 - `front-foundation-agent.md`
 - `front-core-experience-agent.md`
 - `front-admin-agent.md`
@@ -28,16 +29,17 @@ Organizar a construção do frontend V2 por agentes especializados, com papéis 
 2. `front-architecture-agent`
 3. `front-shell-agent`
 4. `front-design-system-agent`
-5. `front-foundation-agent`
-6. `front-core-experience-agent`
-7. `front-admin-agent`
-8. `front-chat-agent`
-9. `front-integration-agent`
-10. `front-devops-agent`
-11. `front-security-agent`
-12. `front-quality-agent`
-13. `front-mobile-uiux-agent`
-14. `front-desktop-uiux-agent`
+5. `front-screen-agent`
+6. `front-foundation-agent`
+7. `front-core-experience-agent`
+8. `front-admin-agent`
+9. `front-chat-agent`
+10. `front-integration-agent`
+11. `front-devops-agent`
+12. `front-security-agent`
+13. `front-quality-agent`
+14. `front-mobile-uiux-agent`
+15. `front-desktop-uiux-agent`
 
 ## Regra principal
 

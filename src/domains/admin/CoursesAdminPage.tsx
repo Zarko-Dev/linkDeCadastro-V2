@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
-import { apiFetch } from '@/shared/lib/api';
+import { apiFetch, ApiFetchError } from '@/shared/lib/api';
 import { FadeIn, StaggerGroup, StaggerItem } from '@/shared/ui/motion/MotionPrimitives';
 
 type CourseItem = {
@@ -36,19 +36,47 @@ export function CoursesAdminPage() {
   const [form, setForm] = useState<CourseForm>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState('Carregando cursos...');
+  const [loading, setLoading] = useState(true);
 
   async function refresh() {
-    const response = await apiFetch<CoursesResponse>('/v2/courses');
-    setData(response);
-    setMessage(`Total: ${response.meta.total}`);
+    setLoading(true);
+
+    try {
+      const response = await apiFetch<CoursesResponse>('/v2/courses');
+      setData(response);
+      setMessage(`Total: ${response.meta.total}`);
+    } catch (error) {
+      setMessage(error instanceof ApiFetchError ? error.message : 'Falha ao carregar cursos');
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
-    refresh().catch(() => setMessage('Falha ao carregar cursos'));
+    refresh();
   }, []);
+
+  function validateForm() {
+    if (!form.title.trim()) {
+      setMessage('Informe o titulo do curso.');
+      return false;
+    }
+
+    if (!form.slug.trim()) {
+      setMessage('Informe o slug do curso.');
+      return false;
+    }
+
+    return true;
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     const currentId = editingId;
     setMessage(currentId ? 'Atualizando curso...' : 'Criando curso...');
 
@@ -56,9 +84,9 @@ export function CoursesAdminPage() {
       await apiFetch(currentId ? `/v2/courses/${currentId}` : '/v2/courses', {
         method: currentId ? 'PATCH' : 'POST',
         body: JSON.stringify({
-          title: form.title,
-          slug: form.slug,
-          description: form.description || undefined,
+          title: form.title.trim(),
+          slug: form.slug.trim(),
+          description: form.description.trim() || undefined,
           status: form.status,
         }),
       });
@@ -67,8 +95,8 @@ export function CoursesAdminPage() {
       setEditingId(null);
       await refresh();
       setMessage(currentId ? 'Curso atualizado' : 'Curso criado');
-    } catch {
-      setMessage('Falha ao salvar curso');
+    } catch (error) {
+      setMessage(error instanceof ApiFetchError ? error.message : 'Falha ao salvar curso');
     }
   }
 
@@ -88,8 +116,8 @@ export function CoursesAdminPage() {
       await apiFetch(`/v2/courses/${id}`, { method: 'DELETE' });
       await refresh();
       setMessage('Curso removido');
-    } catch {
-      setMessage('Falha ao remover curso');
+    } catch (error) {
+      setMessage(error instanceof ApiFetchError ? error.message : 'Falha ao remover curso');
     }
   }
 
@@ -113,8 +141,8 @@ export function CoursesAdminPage() {
           </FadeIn>
           <div className="summary-row" style={{ marginTop: 16 }}>
             <div className="pill">{message}</div>
-            <div className="pill pill-ghost">Core</div>
-            <div className="pill pill-ghost">Catalogo</div>
+            <div className="pill pill-ghost">{loading ? 'Sincronizando...' : 'Core'}</div>
+            <div className="pill pill-ghost">Catalogo real</div>
           </div>
         </div>
 
@@ -149,6 +177,7 @@ export function CoursesAdminPage() {
                   setForm((current) => ({ ...current, title: event.target.value }))
                 }
                 placeholder="Titulo"
+                required
               />
             </StaggerItem>
             <StaggerItem>
@@ -158,6 +187,7 @@ export function CoursesAdminPage() {
                   setForm((current) => ({ ...current, slug: event.target.value }))
                 }
                 placeholder="Slug"
+                required
               />
             </StaggerItem>
             <StaggerItem>
@@ -178,12 +208,13 @@ export function CoursesAdminPage() {
                 }
               >
                 <option value="DRAFT">DRAFT</option>
-                <option value="PUBLISHED">PUBLISHED</option>
+                <option value="ACTIVE">ACTIVE</option>
+                <option value="INACTIVE">INACTIVE</option>
                 <option value="ARCHIVED">ARCHIVED</option>
               </select>
             </StaggerItem>
             <StaggerItem>
-              <button type="submit">
+              <button type="submit" disabled={loading}>
                 {editingId ? 'Salvar alteracoes' : 'Criar curso'}
               </button>
             </StaggerItem>

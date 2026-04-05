@@ -1,209 +1,207 @@
 'use client';
 
-import { useState } from 'react';
-import { FadeIn, StaggerGroup, StaggerItem } from '@/shared/ui/motion/MotionPrimitives';
-import { ZyrHint } from '@/shared/ui/zyr/ZyrStates';
+import {
+  ChevronDown,
+  Mail,
+  MessageCircle,
+  Plus,
+  Search,
+  Split,
+  TimerReset,
+  Webhook,
+  ZoomIn,
+  ZoomOut,
+} from 'lucide-react';
 
-type AutomationDraft = {
-  name: string;
-  trigger: string;
-  condition: string;
-  action: string;
-  target: string;
-};
+const triggerBlocks = [
+  { label: 'Form Submission', icon: MessageCircle },
+  { label: 'Webhook', icon: Webhook },
+] as const;
 
-const defaultDraft: AutomationDraft = {
-  name: 'Novo follow-up de lead',
-  trigger: 'form_submitted',
-  condition: 'contact_has_whatsapp',
-  action: 'send_message_and_assign_agent',
-  target: 'chat-main',
-};
+const actionBlocks = [
+  { label: 'WhatsApp', icon: MessageCircle },
+  { label: 'CRM Sync', icon: Split },
+  { label: 'Send Email', icon: Mail },
+] as const;
 
-const automationCards = [
-  {
-    title: 'Aquecimento de lead',
-    status: 'ACTIVE',
-    summary: 'Dispara no envio do formulario, roteia para o WhatsApp e atribui um copiloto.',
-  },
-  {
-    title: 'Fluxo abandonado',
-    status: 'PAUSED',
-    summary: 'Detecta leads inativos e reengaja depois de um atraso.',
-  },
-  {
-    title: 'Handoff de agente',
-    status: 'ACTIVE',
-    summary: 'Move uma thread da automacao para um operador humano quando necessario.',
-  },
-];
+const logicBlocks = [
+  { label: 'Wait Delay', icon: TimerReset },
+  { label: 'Split Path', icon: Split },
+] as const;
 
 export function AutomationsPage() {
-  const [draft, setDraft] = useState<AutomationDraft>(defaultDraft);
-  const [message, setMessage] = useState('Estudio de automacoes pronto.');
-
   return (
-    <section className="hero-surface wide-page automation-layout">
-      <div className="dashboard-grid">
-        <div className="stack">
-          <FadeIn delay={0.04}>
-            <p className="eyebrow">Automacoes</p>
-          </FadeIn>
-          <FadeIn delay={0.08}>
-            <h2>Estudio de automacao orientado a decisao.</h2>
-          </FadeIn>
-          <FadeIn delay={0.12}>
-            <p>
-              O fluxo precisa parecer um pipeline real: trigger, condition, action e target
-              precisam ser lidos como uma cadeia unica, nao como configuracoes soltas.
-            </p>
-          </FadeIn>
-          <div className="summary-row">
-            <div className="pill">Trigger</div>
-            <div className="pill pill-ghost">Condition</div>
-            <div className="pill pill-ghost">Action</div>
-            <div className="pill pill-ghost">Target</div>
-          </div>
+    <section className="flowbuilder-page">
+      <aside className="flowbuilder-sidebar">
+        <div className="flowbuilder-sidebar-head">
+          <strong>Flow Builder</strong>
+          <small>v2.4 Active • Draft Mode</small>
         </div>
 
-        <div className="workspace-side-stack">
-          <ZyrHint
-            title="Zyr pensa automacao como cadeia de acao"
-            description="A tela precisa mostrar o raciocinio do fluxo antes do clique de salvar. A arquitetura visual deve deixar claro o que inicia, filtra, dispara e onde termina."
-            tips={[
-              'gatilho sempre visivel',
-              'condicao como filtro humano-legivel',
-              'destino ligado a um canal real',
-            ]}
-          />
-          <div className="panel panel-accent">
-            <strong>Linguagem de fluxo</strong>
-            <p>
-              O desktop deve parecer um painel de decisão, nao uma lista solta de configurações.
-            </p>
-          </div>
-          <div className="panel">
-            <strong>Critica da V2</strong>
-            <p>
-              Cada automacao precisa nascer com objetivo, entrada clara e entrega acoplada a uma
-              acao concreta.
-            </p>
-          </div>
+        <div className="flowbuilder-group">
+          <span>Triggers</span>
+          {triggerBlocks.map((block) => {
+            const Icon = block.icon;
+            return (
+              <button key={block.label} type="button" className="flowbuilder-side-item">
+                <span className="flowbuilder-side-icon">
+                  <Icon size={16} />
+                </span>
+                {block.label}
+              </button>
+            );
+          })}
         </div>
-      </div>
 
-      <div className="builder-layout" style={{ marginTop: 18 }}>
-        <article className="panel form-card">
-          <div className="panel-head">
-            <strong>Rascunho da automacao</strong>
-            <span className="pill pill-ghost">Builder</span>
+        <div className="flowbuilder-group">
+          <span>Actions</span>
+          {actionBlocks.map((block) => {
+            const Icon = block.icon;
+            return (
+              <button key={block.label} type="button" className="flowbuilder-side-item">
+                <span className="flowbuilder-side-icon">
+                  <Icon size={16} />
+                </span>
+                {block.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flowbuilder-group">
+          <span>Logic</span>
+          {logicBlocks.map((block) => {
+            const Icon = block.icon;
+            return (
+              <button key={block.label} type="button" className="flowbuilder-side-item">
+                <span className="flowbuilder-side-icon is-logic">
+                  <Icon size={16} />
+                </span>
+                {block.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <button type="button" className="flowbuilder-add-btn">
+          <Plus size={16} />
+          Add Component
+        </button>
+      </aside>
+
+      <main className="flowbuilder-canvas">
+        <div className="flowbuilder-canvas-top">
+          <div className="flowbuilder-flow-title">
+            <strong>Boas-vindas WhatsApp</strong>
+            <span>Draft Mode</span>
           </div>
-          <div className="stack form-grid" style={{ marginTop: 14 }}>
-            <label className="field-block">
-              <span>Nome</span>
-              <input
-                value={draft.name}
-                onChange={(event) =>
-                  setDraft((current) => ({ ...current, name: event.target.value }))
-                }
-              />
-            </label>
-            <label className="field-block">
-              <span>Gatilho</span>
-              <input
-                value={draft.trigger}
-                onChange={(event) =>
-                  setDraft((current) => ({ ...current, trigger: event.target.value }))
-                }
-              />
-            </label>
-            <label className="field-block">
-              <span>Condicao</span>
-              <input
-                value={draft.condition}
-                onChange={(event) =>
-                  setDraft((current) => ({ ...current, condition: event.target.value }))
-                }
-              />
-            </label>
-            <label className="field-block">
-              <span>Acao</span>
-              <input
-                value={draft.action}
-                onChange={(event) =>
-                  setDraft((current) => ({ ...current, action: event.target.value }))
-                }
-              />
-            </label>
-            <label className="field-block">
-              <span>Destino</span>
-              <input
-                value={draft.target}
-                onChange={(event) =>
-                  setDraft((current) => ({ ...current, target: event.target.value }))
-                }
-              />
-            </label>
-            <button type="button" onClick={() => setMessage(`Rascunho pronto para ${draft.name}.`)}>
-              Preparar automacao
+
+          <div className="flowbuilder-toolbar">
+            <button type="button" className="flowbuilder-icon-btn">
+              <Search size={15} />
+            </button>
+            <button type="button" className="flowbuilder-icon-btn">
+              <ZoomIn size={15} />
+            </button>
+            <button type="button" className="flowbuilder-zoom-pill">
+              85%
+            </button>
+            <button type="button" className="flowbuilder-icon-btn">
+              <ZoomOut size={15} />
             </button>
           </div>
-          <p className="muted" style={{ marginTop: 12 }}>
-            O fluxo ideal sempre pode ser entendido sem abrir a documentação.
-          </p>
-        </article>
 
-        <div className="stack">
-          <article className="panel panel-accent">
-            <div className="panel-head">
-              <strong>Preview do fluxo</strong>
-              <span className="badge badge-active">Sequencia</span>
-            </div>
-            <div className="stack automation-flow" style={{ marginTop: 12 }}>
-              <div className="builder-step">
-                <strong>{draft.trigger}</strong>
-                <small>Gatilho</small>
-              </div>
-              <div className="flow-arrow">↓</div>
-              <div className="builder-step">
-                <strong>{draft.condition}</strong>
-                <small>Condicao</small>
-              </div>
-              <div className="flow-arrow">↓</div>
-              <div className="builder-step">
-                <strong>{draft.action}</strong>
-                <small>Acao</small>
-              </div>
-              <div className="flow-arrow">↓</div>
-              <div className="builder-step">
-                <strong>{draft.target}</strong>
-                <small>Destino</small>
-              </div>
-            </div>
-          </article>
+          <button type="button" className="flowbuilder-test-btn">
+            Test Flow
+          </button>
+        </div>
 
-          <div className="panel">
-            <strong>Estado do estúdio</strong>
-            <p className="muted">{message}</p>
+        <div className="flowbuilder-grid">
+          <div className="flowbuilder-node flowbuilder-node-trigger">
+            <span className="flowbuilder-node-tag">Trigger</span>
+            <strong>New Lead</strong>
+            <small>Facebook Ads API</small>
+            <span className="flowbuilder-node-dot" />
           </div>
 
-          <StaggerGroup className="feature-grid" delayChildren={0.08} staggerChildren={0.06}>
-            {automationCards.map((automation) => (
-              <StaggerItem key={automation.title}>
-                <article className="panel">
-                  <div className="panel-head">
-                    <strong>{automation.title}</strong>
-                    <span className={automation.status === 'ACTIVE' ? 'badge badge-active' : 'badge badge-draft'}>
-                      {automation.status}
-                    </span>
-                  </div>
-                  <p>{automation.summary}</p>
-                </article>
-              </StaggerItem>
-            ))}
-          </StaggerGroup>
+          <div className="flowbuilder-connector" />
+
+          <div className="flowbuilder-node flowbuilder-node-wait">
+            <span className="flowbuilder-node-tag">Logic</span>
+            <strong>Wait</strong>
+            <small>Delay 5 min</small>
+          </div>
+
+          <div className="flowbuilder-connector vertical" />
+
+          <div className="flowbuilder-node flowbuilder-node-action is-selected">
+            <span className="flowbuilder-node-tag">Action</span>
+            <strong>Send Message</strong>
+            <small>WhatsApp Confirmation</small>
+          </div>
         </div>
-      </div>
+      </main>
+
+      <aside className="flowbuilder-properties">
+        <div className="flowbuilder-properties-head">
+          <strong>Node Properties</strong>
+          <button type="button">×</button>
+        </div>
+
+        <div className="flowbuilder-selected-card">
+          <div className="flowbuilder-selected-icon">
+            <MessageCircle size={18} />
+          </div>
+          <div>
+            <span>WhatsApp Action</span>
+            <strong>Send Message</strong>
+          </div>
+        </div>
+
+        <label className="flowbuilder-field">
+          <span>Message Template</span>
+          <button type="button" className="flowbuilder-select">
+            Welcome New Lead - Variant A
+            <ChevronDown size={16} />
+          </button>
+        </label>
+
+        <div className="flowbuilder-field">
+          <div className="flowbuilder-field-row">
+            <span>Message Preview</span>
+            <small>Characters: 124/1024</small>
+          </div>
+          <div className="flowbuilder-preview-box">
+            <p>Olá {'{{first_name}}'}!</p>
+            <p>
+              Obrigado por se cadastrar na Growth Ops. Recebemos seu interesse e logo um
+              especialista entrará em contato. Enquanto isso, tem algo específico que gostaria de
+              saber?
+            </p>
+          </div>
+        </div>
+
+        <div className="flowbuilder-field">
+          <span>Options</span>
+          <div className="flowbuilder-toggle-row">
+            <span>Retry on failure</span>
+            <button type="button" className="flowbuilder-toggle is-on" />
+          </div>
+          <div className="flowbuilder-toggle-row">
+            <span>Track link clicks</span>
+            <button type="button" className="flowbuilder-toggle" />
+          </div>
+        </div>
+
+        <div className="flowbuilder-properties-actions">
+          <button type="button" className="flowbuilder-danger-btn">
+            Delete Node
+          </button>
+          <button type="button" className="flowbuilder-apply-btn">
+            Apply Changes
+          </button>
+        </div>
+      </aside>
     </section>
   );
 }

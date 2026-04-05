@@ -30,6 +30,12 @@ Construir uma experiencia nova, limpa e desacoplada do legado, com:
 - banco principal do core separado do dominio de WhatsApp
 - arquitetura preparada para escala e processamento assincrono
 
+## Login local
+
+Para testar o fluxo real, configure `NEXT_PUBLIC_API_URL=http://localhost:4000`, rode a API em `linkDeCadastroApi-V2` e entre com `admin@linkdecadastro.com` e a senha definida em `DEV_ADMIN_PASSWORD`.
+
+Se a API estiver em outro endereco, ajuste `NEXT_PUBLIC_API_URL` para o host correto e mantenha `APP_ORIGIN` alinhado no backend.
+
 ## Principio de sustentabilidade
 
 A V2 segue o conceito `O -> N -> On`:

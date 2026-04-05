@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { apiFetch } from '@/shared/lib/api';
+import { apiFetch, ApiFetchError } from '@/shared/lib/api';
 import { FadeIn, StaggerGroup, StaggerItem } from '@/shared/ui/motion/MotionPrimitives';
 
 type EventItem = {
@@ -51,19 +51,47 @@ export function EventsAdminPage() {
   const [form, setForm] = useState<EventForm>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState('Carregando eventos...');
+  const [loading, setLoading] = useState(true);
 
   async function refresh() {
-    const response = await apiFetch<EventsResponse>('/v2/events');
-    setData(response);
-    setMessage(`Total: ${response.meta.total}`);
+    setLoading(true);
+
+    try {
+      const response = await apiFetch<EventsResponse>('/v2/events');
+      setData(response);
+      setMessage(`Total: ${response.meta.total}`);
+    } catch (error) {
+      setMessage(error instanceof ApiFetchError ? error.message : 'Falha ao carregar eventos');
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
-    refresh().catch(() => setMessage('Falha ao carregar eventos'));
+    refresh();
   }, []);
+
+  function validateForm() {
+    if (!form.title.trim()) {
+      setMessage('Informe o titulo do evento.');
+      return false;
+    }
+
+    if (!form.slug.trim()) {
+      setMessage('Informe o slug do evento.');
+      return false;
+    }
+
+    return true;
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     const currentId = editingId;
     setMessage(currentId ? 'Atualizando evento...' : 'Criando evento...');
 
@@ -71,9 +99,9 @@ export function EventsAdminPage() {
       await apiFetch(currentId ? `/v2/events/${currentId}` : '/v2/events', {
         method: currentId ? 'PATCH' : 'POST',
         body: JSON.stringify({
-          title: form.title,
-          slug: form.slug,
-          description: form.description || undefined,
+          title: form.title.trim(),
+          slug: form.slug.trim(),
+          description: form.description.trim() || undefined,
           status: form.status,
           maxRegistrations: form.maxRegistrations ? Number(form.maxRegistrations) : null,
         }),
@@ -83,8 +111,8 @@ export function EventsAdminPage() {
       setEditingId(null);
       await refresh();
       setMessage(currentId ? 'Evento atualizado' : 'Evento criado');
-    } catch {
-      setMessage('Falha ao salvar evento');
+    } catch (error) {
+      setMessage(error instanceof ApiFetchError ? error.message : 'Falha ao salvar evento');
     }
   }
 
@@ -108,8 +136,8 @@ export function EventsAdminPage() {
       await apiFetch(`/v2/events/${id}`, { method: 'DELETE' });
       await refresh();
       setMessage('Evento removido');
-    } catch {
-      setMessage('Falha ao remover evento');
+    } catch (error) {
+      setMessage(error instanceof ApiFetchError ? error.message : 'Falha ao remover evento');
     }
   }
 
@@ -143,8 +171,8 @@ export function EventsAdminPage() {
           </FadeIn>
           <div className="summary-row" style={{ marginTop: 16 }}>
             <div className="pill">{message}</div>
-            <div className="pill pill-ghost">Inscricoes</div>
-            <div className="pill pill-ghost">Publicacao</div>
+            <div className="pill pill-ghost">{loading ? 'Sincronizando...' : 'Inscricoes'}</div>
+            <div className="pill pill-ghost">Publicacao real</div>
           </div>
         </div>
 
@@ -188,6 +216,7 @@ export function EventsAdminPage() {
                     setForm((current) => ({ ...current, title: event.target.value }))
                   }
                   placeholder="Titulo"
+                  required
                 />
               </label>
             </StaggerItem>
@@ -200,6 +229,7 @@ export function EventsAdminPage() {
                     setForm((current) => ({ ...current, slug: event.target.value }))
                   }
                   placeholder="Slug"
+                  required
                 />
               </label>
             </StaggerItem>
@@ -240,6 +270,7 @@ export function EventsAdminPage() {
                 >
                   <option value="DRAFT">DRAFT</option>
                   <option value="ACTIVE">ACTIVE</option>
+                  <option value="INACTIVE">INACTIVE</option>
                   <option value="CLOSED">CLOSED</option>
                 </select>
               </label>
@@ -248,12 +279,10 @@ export function EventsAdminPage() {
 
           <div className="sticky-action-bar">
             <div className="summary-row">
-              <span className="pill pill-ghost">
-                {editingId ? 'Modo edicao' : 'Novo registro'}
-              </span>
+              <span className="pill pill-ghost">{editingId ? 'Modo edicao' : 'Novo registro'}</span>
               <span className="pill pill-ghost">{events.length} itens</span>
             </div>
-            <button type="submit">
+            <button type="submit" disabled={loading}>
               {editingId ? 'Salvar alteracoes' : 'Criar evento'}
             </button>
           </div>

@@ -1,8 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { FadeIn, StaggerGroup, StaggerItem } from '@/shared/ui/motion/MotionPrimitives';
-import { ZyrHint } from '@/shared/ui/zyr/ZyrStates';
+import { CheckCircle2, Image, Mail, RefreshCw, Video, WalletCards } from 'lucide-react';
 
 type IntegrationCard = {
   name: string;
@@ -10,131 +8,154 @@ type IntegrationCard = {
   detail: string;
   primaryAction: string;
   lastSync: string;
+  icon: typeof Image;
+  channel: string;
 };
 
 const integrations: IntegrationCard[] = [
   {
     name: 'Instagram',
     status: 'PENDING',
-    detail: 'Captura de DM, comentarios e roteamento de leads.',
+    detail: 'Captura DM, comentários e encaminha leads para o fluxo de atendimento.',
     primaryAction: 'Conectar conta',
-    lastSync: 'Aguardando permissao',
+    lastSync: 'Aguardando permissão',
+    icon: Image,
+    channel: 'Social',
   },
   {
     name: 'Facebook',
     status: 'CONNECTED',
-    detail: 'Inbox de paginas e suporte a promocao de eventos.',
-    primaryAction: 'Revisar permissoes',
-    lastSync: 'Sincronizado ha 12 min',
+    detail: 'Inbox das páginas, campanhas e roteamento para eventos publicados.',
+    primaryAction: 'Revisar permissões',
+    lastSync: 'Sincronizado há 12 min',
+    icon: WalletCards,
+    channel: 'Social',
   },
   {
     name: 'YouTube',
     status: 'CONNECTED',
-    detail: 'Conteudo do canal e ativos de aprendizagem.',
+    detail: 'Playlists, conteúdos educacionais e materiais de apoio do canal.',
     primaryAction: 'Sincronizar playlists',
-    lastSync: 'Sincronizado ha 1 h',
+    lastSync: 'Sincronizado há 1 h',
+    icon: Video,
+    channel: 'Conteúdo',
   },
   {
     name: 'Gmail',
     status: 'DISABLED',
-    detail: 'Email transacional e notificacoes operacionais.',
-    primaryAction: 'Ativar integracao',
+    detail: 'E-mail transacional, avisos operacionais e alertas administrativos.',
+    primaryAction: 'Ativar integração',
     lastSync: 'Desativado pelo operador',
+    icon: Mail,
+    channel: 'E-mail',
   },
 ];
 
-function integrationBadgeClass(status: IntegrationCard['status']) {
-  if (status === 'CONNECTED') {
-    return 'badge badge-active';
-  }
-
-  if (status === 'DISABLED') {
-    return 'badge badge-inactive';
-  }
-
-  return 'badge badge-draft';
+function integrationStatusClass(status: IntegrationCard['status']) {
+  if (status === 'CONNECTED') return 'integration-center-status is-connected';
+  if (status === 'PENDING') return 'integration-center-status is-pending';
+  return 'integration-center-status is-disabled';
 }
 
 export function IntegrationsPage() {
-  const [message, setMessage] = useState('Area de integracoes pronta.');
+  const connectedCount = integrations.filter((item) => item.status === 'CONNECTED').length;
+  const pendingCount = integrations.filter((item) => item.status === 'PENDING').length;
 
   return (
-    <section className="hero-surface wide-page">
-      <div className="dashboard-grid">
-        <div className="stack">
-          <FadeIn delay={0.04}>
-            <p className="eyebrow">Integracoes</p>
-          </FadeIn>
-          <FadeIn delay={0.08}>
-            <h2>Portas externas e canais de crescimento.</h2>
-          </FadeIn>
-          <FadeIn delay={0.12}>
-            <p>
-              A tela de integracoes precisa parecer uma camada de produto premium: canais,
-              permissões e sincronização aparecem com clareza e sem ruído administrativo.
-            </p>
-          </FadeIn>
-          <div className="summary-row" style={{ marginTop: 16 }}>
-            <div className="pill">4 integrações-chave</div>
-            <div className="pill pill-ghost">Status visivel</div>
-            <div className="pill pill-ghost">Sincronia operacional</div>
-          </div>
+    <section className="integration-center-page">
+      <header className="integration-center-hero">
+        <div className="integration-center-copy">
+          <span className="integration-center-kicker">Integrações</span>
+          <h1>Portas externas, canais de crescimento e sincronização do ecossistema.</h1>
+          <p>
+            O operador precisa enxergar o estado de cada integração, quando ela sincronizou e qual
+            o próximo passo sem abrir telas técnicas demais.
+          </p>
         </div>
 
-        <div className="workspace-side-stack">
-          <ZyrHint
-            title="Zyr usa integracoes como portas de entrada"
-            description="Instagram, Facebook, YouTube e Gmail devem mostrar status, proximo passo e ultimo sync sem obrigar o operador a interpretar log."
-            tips={[
-              'mostre permissao pendente com clareza',
-              'deixe ultimo sync sempre visivel',
-              'ligue cada integracao a um fluxo util',
-            ]}
-          />
-          <div className="pill">{message}</div>
-          <div className="panel panel-accent">
-            <strong>Principio de sincronizacao</strong>
-            <p>
-              Integracoes precisam mostrar status, permissao e ultimo sync bem-sucedido para que
-              o operador aja sem adivinhar.
-            </p>
-          </div>
+        <div className="integration-center-badges">
+          <span className="integration-center-badge">{connectedCount} conectadas</span>
+          <span className="integration-center-badge is-pending">{pendingCount} pendentes</span>
         </div>
-      </div>
+      </header>
 
-      <div style={{ marginTop: 18 }}>
-        <StaggerGroup className="integration-grid" delayChildren={0.08} staggerChildren={0.06}>
-          {integrations.map((integration) => (
-            <StaggerItem key={integration.name}>
-              <article className="integration-card panel panel-accent">
-                <div className="panel-head">
+      <section className="integration-center-metrics">
+        <article className="integration-center-metric-card">
+          <span>Último sync geral</span>
+          <strong>12 min</strong>
+          <small>Facebook atualizado mais recentemente</small>
+        </article>
+        <article className="integration-center-metric-card">
+          <span>Canais ativos</span>
+          <strong>{connectedCount}</strong>
+          <small>Prontos para uso operacional</small>
+        </article>
+        <article className="integration-center-metric-card">
+          <span>Aguardando ação</span>
+          <strong>{pendingCount + 1}</strong>
+          <small>Permissões ou ativação manual</small>
+        </article>
+      </section>
+
+      <section className="integration-center-grid">
+        {integrations.map((integration) => {
+          const Icon = integration.icon;
+
+          return (
+            <article key={integration.name} className="integration-center-card">
+              <div className="integration-center-card-head">
+                <div className="integration-center-card-title">
+                  <div className="integration-center-icon">
+                    <Icon size={18} />
+                  </div>
                   <div>
                     <strong>{integration.name}</strong>
-                    <p className="muted" style={{ marginTop: 6 }}>
-                      {integration.detail}
-                    </p>
-                  </div>
-                  <span className={integrationBadgeClass(integration.status)}>
-                    {integration.status}
-                  </span>
-                </div>
-                <div className="flow-stack">
-                  <div className="flow-card">
-                    <small>Ultimo sync</small>
-                    <div>{integration.lastSync}</div>
+                    <small>{integration.channel}</small>
                   </div>
                 </div>
-                <div className="summary-row">
-                  <button type="button" onClick={() => setMessage(`${integration.name} acionada.`)}>
-                    {integration.primaryAction}
-                  </button>
-                  <span className="pill pill-ghost">Operacao guiada</span>
-                </div>
-              </article>
-            </StaggerItem>
-          ))}
-        </StaggerGroup>
-      </div>
+                <span className={integrationStatusClass(integration.status)}>{integration.status}</span>
+              </div>
+
+              <p>{integration.detail}</p>
+
+              <div className="integration-center-meta">
+                <span>Último sync: {integration.lastSync}</span>
+                <span>Canal: {integration.channel}</span>
+              </div>
+
+              <div className="integration-center-actions">
+                <button type="button">
+                  {integration.status === 'CONNECTED' ? <RefreshCw size={14} /> : <CheckCircle2 size={14} />}
+                  {integration.primaryAction}
+                </button>
+              </div>
+            </article>
+          );
+        })}
+      </section>
+
+      <section className="integration-center-bottom">
+        <article className="integration-center-note-card is-highlight">
+          <strong>Zyr usa integrações como portas de entrada</strong>
+          <p>
+            Cada card precisa deixar claro se a integração está conectada, quando sincronizou e o
+            que o operador deve fazer agora.
+          </p>
+          <div className="integration-center-note-list">
+            <span>Último sync sempre visível</span>
+            <span>Status sem ambiguidade</span>
+            <span>Ação primária única</span>
+          </div>
+        </article>
+
+        <article className="integration-center-note-card">
+          <strong>Próximos passos sugeridos</strong>
+          <p>
+            Conectar o Instagram, revisar permissões do Facebook, sincronizar playlists do
+            YouTube e decidir se o Gmail volta para a operação.
+          </p>
+        </article>
+      </section>
     </section>
   );
 }

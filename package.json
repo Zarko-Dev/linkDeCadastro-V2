@@ -13,15 +13,20 @@
     "lint": "tsc --noEmit -p tsconfig.lint.json"
   },
   "dependencies": {
+    "lucide-react": "^1.7.0",
     "motion": "^12.38.0",
     "next": "^15.5.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.2",
     "@types/node": "^22.10.7",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
+    "autoprefixer": "^10.4.27",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^4.2.2",
     "typescript": "^5.3.3"
   }
 }

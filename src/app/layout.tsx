@@ -3,8 +3,8 @@ import { ReactNode } from 'react';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Link de Cadastro V2',
-  description: 'Frontend V2 do Link de Cadastro em Next.js',
+  title: 'ZYRO',
+  description: 'Frontend institucional e operacional do ZYRO',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
